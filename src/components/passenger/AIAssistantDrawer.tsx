@@ -121,7 +121,7 @@ export default function AIAssistantDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] flex justify-end bg-slate-950/70 backdrop-blur-sm">
       <div className="w-full max-w-md h-full bg-slate-950 border-l border-slate-800 flex flex-col shadow-2xl relative">
         {/* Header */}
         <div className="p-4 border-b border-slate-800 bg-slate-900 flex items-center justify-between">

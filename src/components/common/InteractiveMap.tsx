@@ -326,9 +326,9 @@ export default function InteractiveMap({
   const activeBus = buses.find((b) => b.id === activeBusId) || buses[0];
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl bg-slate-950" style={{ height }}>
+    <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl bg-slate-950 isolate z-0" style={{ height }}>
       {/* Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full relative" />
+      <div ref={mapContainerRef} className="w-full h-full relative z-0" />
 
       {/* Loading Skeleton */}
       {!mapReady && (

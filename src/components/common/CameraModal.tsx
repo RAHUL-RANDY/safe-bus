@@ -257,7 +257,7 @@ export default function CameraModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
         <div className="w-full max-w-lg bg-slate-900/95 border border-cyan-500/30 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.2)] flex flex-col relative">
           {/* Header */}
           <div className="p-4 border-b border-white/10 bg-slate-950/80 flex items-center justify-between">

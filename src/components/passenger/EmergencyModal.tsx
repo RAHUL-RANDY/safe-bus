@@ -71,7 +71,7 @@ export default function EmergencyModal({
   const isAlertActive = Boolean(activeAlert && activeAlert.status !== "resolved");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div
         className={`w-full max-w-md rounded-3xl p-6 shadow-2xl relative overflow-hidden transition-all border ${
           isAlertActive
