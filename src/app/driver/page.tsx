@@ -6,13 +6,12 @@ import InteractiveMap from "@/components/common/InteractiveMap";
 import DriverCockpitPanel from "@/components/driver/DriverCockpitPanel";
 import { getSyncEngine } from "@/lib/sync-engine";
 import { Bus, Alert, GeoLocation } from "@/types";
-import { Gauge, Bus as BusIcon, Shield, Radio, Navigation } from "lucide-react";
+import { Bus as BusIcon } from "lucide-react";
 
 export default function DriverPage() {
   const [buses, setBuses] = useState<Bus[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedBusId, setSelectedBusId] = useState<string>("BUS-42A");
-  const [focusLocation, setFocusLocation] = useState<GeoLocation | null>(null);
 
   useEffect(() => {
     const engine = getSyncEngine();
@@ -56,11 +55,11 @@ export default function DriverPage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
         {/* Driver Unit Selector Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/80 border border-white/10">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900 border border-slate-800 shadow">
           <div className="flex items-center gap-2 text-xs">
-            <BusIcon className="w-4 h-4 text-cyan-400" />
-            <span className="font-bold text-slate-300">Active Vehicle Assigned:</span>
-            <span className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-mono font-bold">
+            <BusIcon className="w-4 h-4 text-blue-400" />
+            <span className="font-bold text-slate-300">Vehicle Assigned:</span>
+            <span className="px-2 py-0.5 rounded bg-blue-950 text-blue-300 font-mono font-bold border border-blue-800">
               {activeBus.id} • {activeBus.plateNumber}
             </span>
           </div>
@@ -70,7 +69,7 @@ export default function DriverPage() {
             <select
               value={selectedBusId}
               onChange={(e) => setSelectedBusId(e.target.value)}
-              className="bg-slate-950 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+              className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
             >
               {buses.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -81,8 +80,8 @@ export default function DriverPage() {
           </div>
         </div>
 
-        {/* Live Route Mini Map View */}
-        <div className="w-full h-[280px] sm:h-[340px] rounded-3xl overflow-hidden border border-white/15 shadow-2xl relative">
+        {/* Live Route Map View */}
+        <div className="w-full h-[260px] sm:h-[300px] rounded-2xl overflow-hidden border border-slate-800 shadow relative">
           <InteractiveMap
             buses={[activeBus]}
             activeBusId={activeBus.id}
@@ -90,13 +89,13 @@ export default function DriverPage() {
             focusLocation={activeBus.currentLocation}
             height="100%"
           />
-          <div className="absolute top-3 left-3 z-[1000] bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-[11px] font-mono text-cyan-300 flex items-center gap-2 shadow-lg">
+          <div className="absolute top-3 left-3 z-[1000] bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-700 text-xs font-mono text-slate-200 flex items-center gap-2 shadow">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>GPS HUD Active: {activeBus.nextStop}</span>
+            <span>Next Corridor Stop: {activeBus.nextStop}</span>
           </div>
         </div>
 
-        {/* Cockpit Controls & Telemetry */}
+        {/* Cockpit Controls */}
         <DriverCockpitPanel bus={activeBus} />
       </main>
     </div>

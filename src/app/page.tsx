@@ -18,18 +18,16 @@ import {
   LayoutDashboard,
   Shield,
   Sparkles,
-  Zap,
-  Radio,
   Play,
   RotateCcw,
   ArrowRight,
   ShieldAlert,
   Bus as BusIcon,
-  Lock,
-  Clock,
-  Camera,
+  Ticket,
   Activity,
   CheckCircle2,
+  Lock,
+  Radio,
 } from "lucide-react";
 
 export default function SplitDemoPage() {
@@ -168,46 +166,50 @@ export default function SplitDemoPage() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans">
       <Navbar />
 
-      {/* Hero Guide & Quick Test Bar */}
-      <section className="bg-slate-900/90 border-b border-cyan-500/20 py-4 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col gap-4">
-          {/* Top Quick Actions Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
-                <Sparkles className="w-4 h-4" />
+      {/* Hero Guide & Role Portals Banner */}
+      <section className="bg-slate-900 border-b border-slate-800 py-6 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col gap-6">
+          {/* Header & Quick Action */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-md bg-blue-600/20 text-blue-400 text-xs font-bold border border-blue-500/30 uppercase tracking-wider">
+                  Public Transit Portal
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Fleet System Operational
+                </span>
               </div>
-              <div>
-                <h1 className="text-sm sm:text-base font-extrabold text-white">
-                  SafeBus Nexus — Interactive System Control
-                </h1>
-                <p className="text-xs text-slate-300">
-                  Real-time synchronized simulation across Passenger App, Driver Cockpit, and Fleet Command.
-                </p>
-              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                SafeBus Nexus Management System
+              </h1>
+              <p className="text-sm text-slate-300">
+                Unified public transport platform for passenger safety, driver cockpit telemetry, and 24/7 fleet command.
+              </p>
             </div>
 
-            {/* Action Simulator Buttons */}
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Top Quick Simulator Controls */}
+            <div className="flex items-center gap-2.5 flex-wrap">
               <button
                 onClick={runQuickDemoSequence}
-                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-cyan-500/25 transition active:scale-95"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md transition"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>1-Click Test Flow</span>
+                <span>Run Quick Test Ride</span>
               </button>
 
               <button
                 onClick={() => handleTriggerSOS("sos", "Manual Test SOS Incident")}
-                className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/50 text-red-300 text-xs font-bold flex items-center gap-1.5 transition active:scale-95"
+                className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition"
               >
-                <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
-                <span>Simulate SOS</span>
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Test SOS</span>
               </button>
 
               <button
                 onClick={() => getSyncEngine().resetDemoData()}
-                className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-white/10 flex items-center gap-1 transition"
+                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 flex items-center gap-1.5 transition"
                 title="Reset simulation data"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -216,72 +218,100 @@ export default function SplitDemoPage() {
             </div>
           </div>
 
-          {/* 3-Step Simple Guide Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/10 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center font-bold text-xs shrink-0">
-                1
+          {/* 3 Prominent Role Access Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 1. Passenger Portal */}
+            <Link
+              href="/passenger"
+              className="p-4 rounded-2xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-blue-500/50 transition group flex flex-col justify-between gap-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-blue-400 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                  Open App →
+                </span>
               </div>
               <div>
-                <div className="text-xs font-bold text-white">Board & Track Ride</div>
-                <div className="text-[11px] text-slate-400">QR check-in, live stop ETAs, seat assignment</div>
+                <h3 className="text-sm font-bold text-white">Passenger Safety App</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Track bus GPS, view arrival stop ETAs, digital ticket QR code, and 1-tap SOS distress button.
+                </p>
               </div>
-            </div>
+            </Link>
 
-            <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/10 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-xs shrink-0">
-                2
+            {/* 2. Driver Cockpit */}
+            <Link
+              href="/driver"
+              className="p-4 rounded-2xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 transition group flex flex-col justify-between gap-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold">
+                  <BusIcon className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                  Open Cockpit →
+                </span>
               </div>
               <div>
-                <div className="text-xs font-bold text-white">AI Vision & Safe Cam</div>
-                <div className="text-[11px] text-slate-400">Live DMS, 4-channel CCTV, 1-tap SOS</div>
+                <h3 className="text-sm font-bold text-white">Driver Cockpit Console</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Digital speedometer HUD, pneumatic door locks, passenger counter, and DMS fatigue camera.
+                </p>
               </div>
-            </div>
+            </Link>
 
-            <div className="p-3 rounded-2xl bg-slate-950/70 border border-white/10 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
-                3
+            {/* 3. Fleet Command */}
+            <Link
+              href="/operator"
+              className="p-4 rounded-2xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 transition group flex flex-col justify-between gap-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold">
+                  <LayoutDashboard className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-indigo-400 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                  Open Command →
+                </span>
               </div>
               <div>
-                <div className="text-xs font-bold text-white">24h Auto-Purge Vault</div>
-                <div className="text-[11px] text-slate-400">All footage permanently deleted 24h post-ride</div>
+                <h3 className="text-sm font-bold text-white">Fleet Operator Command</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Live interactive route map, real 4-channel CCTV video surveillance, and emergency dispatch.
+                </p>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Main Dual-View Split Container */}
+      {/* Main Dual-View Interactive Simulator */}
       <main className="flex-1 max-w-[1500px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        {/* LEFT VIEW: PASSENGER APP (Mobile Frame Representation) */}
+        {/* LEFT VIEW: PASSENGER APP (Clean Mobile Preview) */}
         <div className="xl:col-span-5 flex flex-col items-center">
           <div className="w-full max-w-[440px] flex flex-col gap-3">
-            {/* View Header Label */}
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 uppercase tracking-wider">
-                <Smartphone className="w-4 h-4" />
-                <span>Passenger Smartphone App</span>
+            {/* Header */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                <Smartphone className="w-4 h-4 text-blue-400" />
+                <span>Passenger Interface</span>
               </div>
               <Link
                 href="/passenger"
-                className="text-[11px] text-cyan-400 hover:text-cyan-300 underline font-semibold flex items-center gap-1"
+                className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
               >
-                <span>Open Full Page</span>
+                <span>Full Page</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
 
-            {/* Mobile Device Glass Frame */}
-            <div className="w-full rounded-[36px] p-4 bg-slate-900/90 border-2 border-cyan-500/30 shadow-[0_0_40px_rgba(34,211,238,0.15)] flex flex-col gap-4 relative overflow-hidden min-h-[760px]">
-              {/* Dynamic Island / Notch */}
-              <div className="w-28 h-4 rounded-full bg-slate-950 mx-auto border border-white/10 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-cyan-500/80"></div>
-              </div>
-
+            {/* Clean Mobile Frame */}
+            <div className="w-full rounded-3xl p-4 bg-slate-900 border border-slate-800 shadow-xl flex flex-col gap-4 relative min-h-[720px]">
               {currentTrip ? (
                 <div className="flex flex-col gap-4">
-                  {/* Passenger Interactive Mini Map */}
-                  <div className="w-full h-52 rounded-2xl overflow-hidden border border-white/10 shadow-lg relative">
+                  {/* Passenger Map Tile */}
+                  <div className="w-full h-48 rounded-2xl overflow-hidden border border-slate-800 shadow relative">
                     <InteractiveMap
                       buses={activeBus ? [activeBus] : []}
                       activeBusId={activeBus?.id}
@@ -289,8 +319,8 @@ export default function SplitDemoPage() {
                       focusLocation={activeBus?.currentLocation}
                       height="100%"
                     />
-                    <div className="absolute top-2 left-2 z-[1000] bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[10px] font-mono text-cyan-300 flex items-center gap-1.5 shadow">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <div className="absolute top-2 left-2 z-[1000] bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700 text-xs font-medium text-slate-200 flex items-center gap-1.5 shadow">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                       <span>Next: {activeBus?.nextStop || "In Transit"}</span>
                     </div>
                   </div>
@@ -317,51 +347,51 @@ export default function SplitDemoPage() {
 
         {/* RIGHT VIEW: FLEET OPERATOR COMMAND CENTER */}
         <div className="xl:col-span-7 flex flex-col gap-4">
-          {/* View Header Label */}
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
-              <LayoutDashboard className="w-4 h-4 text-cyan-400" />
-              <span>Fleet Operator Command Dashboard</span>
+          {/* Header */}
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+              <LayoutDashboard className="w-4 h-4 text-indigo-400" />
+              <span>Fleet Operations Monitor</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <Link
                 href="/driver"
-                className="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 bg-slate-900 px-2.5 py-1 rounded-lg border border-white/10"
+                className="text-xs text-slate-300 hover:text-white font-medium flex items-center gap-1 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 transition"
               >
-                <BusIcon className="w-3.5 h-3.5" />
+                <BusIcon className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Driver Panel →</span>
               </Link>
               {openAlertsCount > 0 ? (
-                <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black animate-pulse">
-                  🚨 {openAlertsCount} ACTIVE SOS
+                <span className="px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold">
+                  🚨 {openAlertsCount} Active SOS
                 </span>
               ) : (
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
-                  🟢 ALL CLEAR
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-semibold">
+                  🟢 Normal Operations
                 </span>
               )}
             </div>
           </div>
 
           {/* Operations Telemetry Status Strip */}
-          <div className="px-4 py-2 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-wrap items-center justify-between text-xs text-slate-300 font-mono">
+          <div className="px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-300">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-white font-bold">SafeBus Nexus Fleet Grid</span>
-              <span className="text-slate-500">•</span>
-              <span>{buses.length} Units Active</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="text-white font-bold">Bangalore Metro Corridor</span>
+              <span className="text-slate-600">•</span>
+              <span>{buses.length} Fleet Vehicles Active</span>
             </div>
-            <div className="flex items-center gap-3 text-[11px]">
-              <span className="text-cyan-300 font-bold">Average Dispatch: ~1.8m</span>
-              <span className="text-slate-500">•</span>
-              <span className={openAlertsCount > 0 ? "text-red-400 font-bold" : "text-emerald-400 font-bold"}>
-                {openAlertsCount > 0 ? `🚨 ${openAlertsCount} Emergency Queue` : "🟢 Zero Incidents"}
+            <div className="flex items-center gap-3">
+              <span className="text-blue-400 font-semibold">Avg Dispatch: ~1.8m</span>
+              <span className="text-slate-600">•</span>
+              <span className={openAlertsCount > 0 ? "text-red-400 font-bold" : "text-emerald-400"}>
+                {openAlertsCount > 0 ? `🚨 ${openAlertsCount} Open SOS Alert` : "Zero Incident Queue"}
               </span>
             </div>
           </div>
 
           {/* Operator Big Map */}
-          <div className="w-full h-[380px] rounded-3xl overflow-hidden border border-white/15 shadow-2xl">
+          <div className="w-full h-[360px] rounded-2xl overflow-hidden border border-slate-800 shadow-md">
             <InteractiveMap
               buses={buses}
               activeBusId={selectedBusId}
@@ -392,7 +422,7 @@ export default function SplitDemoPage() {
             />
           </div>
 
-          {/* On-Board AI CCTV Surveillance with Live Webcam Access & 24h Purge */}
+          {/* On-Board AI CCTV Surveillance */}
           <OnBoardCCTVFeed
             bus={activeBus}
             onFlagDriverDistraction={() => {

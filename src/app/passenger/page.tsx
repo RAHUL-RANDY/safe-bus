@@ -9,7 +9,7 @@ import EmergencyModal from "@/components/passenger/EmergencyModal";
 import AIAssistantDrawer from "@/components/passenger/AIAssistantDrawer";
 import { getSyncEngine } from "@/lib/sync-engine";
 import { Bus, Trip, Alert } from "@/types";
-import { Shield, Sparkles, AlertTriangle, PhoneCall } from "lucide-react";
+import { Shield, Sparkles } from "lucide-react";
 
 export default function PassengerPage() {
   const [buses, setBuses] = useState<Bus[]>([]);
@@ -114,8 +114,8 @@ export default function PassengerPage() {
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Interactive Map & Live Movement */}
-        <div className="lg:col-span-7 flex flex-col gap-4 h-[480px] sm:h-[540px] lg:h-[720px]">
+        {/* Left Column: Interactive Map */}
+        <div className="lg:col-span-7 flex flex-col gap-4 h-[440px] sm:h-[500px] lg:h-[680px] rounded-2xl overflow-hidden border border-slate-800 shadow-md">
           <InteractiveMap
             buses={buses}
             activeBusId={currentTrip?.busId || "BUS-42A"}
@@ -124,12 +124,12 @@ export default function PassengerPage() {
           />
         </div>
 
-        {/* Right Column: Passenger Actions & Telemetry HUD */}
-        <div className="lg:col-span-5 flex flex-col gap-5">
+        {/* Right Column: Passenger Actions */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
           {!currentTrip ? (
             <PassengerCheckIn onStartTrip={handleStartTrip} />
           ) : (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
               <LiveTripCard
                 trip={currentTrip}
                 bus={activeBus}
@@ -139,32 +139,32 @@ export default function PassengerPage() {
                 isSosActive={Boolean(activeAlert)}
               />
 
-              {/* Quick AI Assistance Card */}
-              <div className="glass-panel p-4 rounded-3xl border border-cyan-500/20 flex items-center justify-between shadow-xl">
+              {/* AI Assistance Card */}
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between shadow">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
-                    <Sparkles className="w-5 h-5" />
+                  <div className="w-9 h-9 rounded-lg bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800">
+                    <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">Need Route Help?</h4>
-                    <p className="text-[11px] text-slate-400">
-                      Nexus AI is ready to answer questions about this trip
+                    <h4 className="text-xs font-bold text-white">Route Questions?</h4>
+                    <p className="text-xs text-slate-400">
+                      Nexus AI is ready to help with ETAs and connections
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsAiDrawerOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 transition"
+                  className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition"
                 >
-                  Chat
+                  Ask AI
                 </button>
               </div>
 
               {/* Safety Protocol Banner */}
-              <div className="glass-panel p-4 rounded-2xl border border-white/10 text-xs text-slate-300 flex items-center gap-3">
-                <Shield className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 flex items-center gap-2.5">
+                <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>
-                  <b>Safety Shield Active:</b> Your ride is supervised by automated speed anomaly detection & 24/7 operator dispatch.
+                  <b>Protected Ride:</b> Vehicle telematics connected to 24/7 Fleet Command.
                 </span>
               </div>
             </div>

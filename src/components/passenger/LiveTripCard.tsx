@@ -16,6 +16,7 @@ import {
   Camera,
   Ticket,
   ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -41,324 +42,155 @@ export default function LiveTripCard({
 
   const handleComplete = () => {
     confetti({
-      particleCount: 100,
-      spread: 80,
+      particleCount: 80,
+      spread: 70,
       origin: { y: 0.6 },
-      colors: ["#6366f1", "#22d3ee", "#a855f7", "#10b981"],
     });
     onEndTrip();
   };
 
-  const nextStopName = bus?.nextStop || "Next Transit Hub";
+  const nextStopName = bus?.nextStop || "Silk Board Interchange";
   const etaMinutes = bus?.etaMinutes || 5;
-  const speed = bus?.speed || 40;
+  const speed = bus?.speed || 42;
 
   return (
-    <div
-      className="w-full relative overflow-hidden rounded-3xl animate-slide-up"
-      style={{
-        background: "rgba(255,255,255,0.045)",
-        backdropFilter: "blur(28px) saturate(180%)",
-        WebkitBackdropFilter: "blur(28px) saturate(180%)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.08) inset",
-      }}
-    >
-      {/* Top shimmer gradient line */}
-      <div
-        className="absolute top-0 left-0 right-0 h-px"
-        style={{
-          background: "linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.7) 30%, rgba(34,211,238,0.5) 70%, transparent 100%)",
-        }}
-      />
-
-      {/* Background orb */}
-      <div
-        className="absolute -top-20 -right-20 w-52 h-52 rounded-full pointer-events-none"
-        style={{
-          background: "radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)",
-        }}
-      />
-
-      <div className="p-5 relative z-10">
-
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between gap-3 mb-5">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white relative overflow-hidden flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg, #6366f1, #22d3ee)",
-                boxShadow: "0 0 20px rgba(99,102,241,0.45)",
-              }}
-            >
-              <Navigation className="w-4.5 h-4.5 animate-pulse" />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.2), transparent)" }} />
-            </div>
-            <div>
-              <div
-                className="text-[9px] font-bold uppercase tracking-widest mb-0.5"
-                style={{
-                  background: "linear-gradient(90deg, #a5b4fc, #22d3ee)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                ● Active Journey
-              </div>
-              <h3 className="text-sm font-bold text-white leading-tight">{trip.routeName}</h3>
-            </div>
+    <div className="w-full rounded-2xl bg-slate-900 border border-slate-800 shadow-lg p-5 flex flex-col gap-4">
+      {/* Card Header */}
+      <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow">
+            <Navigation className="w-5 h-5" />
           </div>
-
-          <div
-            className="text-right px-2.5 py-1.5 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            <div className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: "#64748b", fontFamily: "JetBrains Mono, monospace" }}>
-              BUS UNIT
-            </div>
-            <div className="text-xs font-bold text-white" style={{ fontFamily: "JetBrains Mono, monospace" }}>
-              {trip.busId}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Telemetry Grid ── */}
-        <div className="grid grid-cols-3 gap-2.5 mb-4">
-          {[
-            {
-              icon: Clock,
-              label: "ETA",
-              value: etaMinutes,
-              unit: "min",
-              sub: nextStopName,
-              accent: "#22d3ee",
-              glow: "rgba(34,211,238,0.2)",
-            },
-            {
-              icon: Gauge,
-              label: "Speed",
-              value: speed,
-              unit: "km/h",
-              sub: "Normal",
-              accent: "#a5b4fc",
-              glow: "rgba(99,102,241,0.2)",
-            },
-            {
-              icon: User,
-              label: "Seat",
-              value: trip.seatNumber || "14B",
-              unit: "",
-              sub: trip.passengerName,
-              accent: "#fcd34d",
-              glow: "rgba(252,211,77,0.2)",
-            },
-          ].map(({ icon: Icon, label, value, unit, sub, accent, glow }) => (
-            <div
-              key={label}
-              className="rounded-2xl p-3 text-center relative overflow-hidden"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                boxShadow: `0 0 20px ${glow}`,
-              }}
-            >
-              <div className="flex items-center justify-center gap-1 text-[9px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#64748b" }}>
-                <Icon className="w-2.5 h-2.5" style={{ color: accent }} />
-                {label}
-              </div>
-              <div className="text-xl font-black leading-none" style={{ color: accent, fontFamily: "JetBrains Mono, monospace" }}>
-                {value}
-                {unit && <span className="text-[10px] font-medium ml-0.5" style={{ color: "#64748b" }}>{unit}</span>}
-              </div>
-              <div className="text-[9px] mt-1 truncate" style={{ color: "#94a3b8" }}>{sub}</div>
-              {/* glow orb */}
-              <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-4 rounded-full"
-                style={{ background: `${glow}`, filter: "blur(8px)" }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* ── Route Progress ── */}
-        <div
-          className="rounded-2xl p-3.5 mb-4"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <div className="flex items-center justify-between text-[11px] font-medium mb-2.5">
-            <div className="flex items-center gap-1.5" style={{ color: "#94a3b8" }}>
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ background: "#10b981", boxShadow: "0 0 6px #10b981" }}
-              />
-              <span className="truncate max-w-[110px]">{trip.originStop}</span>
-            </div>
-            <ArrowRight className="w-3 h-3 flex-shrink-0" style={{ color: "#475569" }} />
-            <div className="flex items-center gap-1.5 text-right" style={{ color: "#22d3ee" }}>
-              <span className="truncate max-w-[110px]">{trip.destinationStop}</span>
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ background: "#f59e0b", boxShadow: "0 0 6px #f59e0b" }}
-              />
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div
-            className="relative h-1.5 rounded-full overflow-hidden"
-            style={{ background: "rgba(255,255,255,0.06)" }}
-          >
-            <div
-              className="absolute top-0 left-0 h-full w-2/3 rounded-full"
-              style={{
-                background: "linear-gradient(90deg, #10b981, #22d3ee, #6366f1)",
-                boxShadow: "0 0 12px rgba(34,211,238,0.5)",
-              }}
-            />
-            {/* Bus position dot */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white animate-pulse"
-              style={{ left: "calc(66% - 6px)", background: "#22d3ee", boxShadow: "0 0 8px #22d3ee" }}
-            />
-          </div>
-          <div className="flex justify-between text-[9px] mt-1.5" style={{ color: "#475569" }}>
-            <span>START</span>
-            <span className="font-bold" style={{ color: "#22d3ee", fontFamily: "JetBrains Mono, monospace" }}>67% COMPLETE</span>
-            <span>END</span>
-          </div>
-        </div>
-
-        {/* ── Action Buttons ── */}
-        <div className="flex flex-col gap-2">
-
-          {/* AI + Camera row */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={onOpenAssistant}
-              className="py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all group active:scale-95"
-              style={{
-                background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(34,211,238,0.08))",
-                border: "1px solid rgba(99,102,241,0.3)",
-                color: "#a5b4fc",
-              }}
-            >
-              <Sparkles className="w-3.5 h-3.5 flex-shrink-0 group-hover:scale-110 transition" />
-              <span>Nexus AI</span>
-              <span
-                className="ml-auto text-[9px] px-1.5 py-0.5 rounded font-bold"
-                style={{ background: "rgba(34,211,238,0.15)", color: "#22d3ee", fontFamily: "JetBrains Mono, monospace" }}
-              >
-                Chat
-              </span>
-            </button>
-
-            <button
-              onClick={() => setIsCameraOpen(true)}
-              className="py-2 px-3 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all group active:scale-95"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                color: "#94a3b8",
-              }}
-            >
-              <Camera className="w-3.5 h-3.5 flex-shrink-0 group-hover:scale-110 transition" />
-              <span>Safety Cam</span>
-              <span
-                className="ml-auto text-[9px] px-1.5 py-0.5 rounded font-bold"
-                style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", fontFamily: "JetBrains Mono, monospace" }}
-              >
-                LIVE
-              </span>
-            </button>
-          </div>
-
-          {/* E-Ticket */}
-          <button
-            onClick={() => setIsTicketOpen(true)}
-            className="w-full py-2.5 px-3 rounded-2xl text-xs font-bold flex items-center justify-between transition-all group active:scale-[0.99]"
-            style={{
-              background: "linear-gradient(135deg, rgba(99,102,241,0.10), rgba(168,85,247,0.07))",
-              border: "1px solid rgba(99,102,241,0.22)",
-              color: "#c4b5fd",
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className="w-6 h-6 rounded-lg flex items-center justify-center"
-                style={{ background: "rgba(99,102,241,0.2)" }}
-              >
-                <Ticket className="w-3 h-3" />
-              </div>
-              <span>Digital Smart E-Ticket & Live QR</span>
-            </div>
-            <span
-              className="text-[9px] px-2 py-0.5 rounded font-bold"
-              style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc", fontFamily: "JetBrains Mono, monospace" }}
-            >
-              Seat {trip.seatNumber}
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+              ● Active Passenger Trip
             </span>
+            <h3 className="text-sm font-bold text-white">{trip.routeName}</h3>
+          </div>
+        </div>
+
+        <div className="text-right px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800">
+          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-mono">Bus ID</div>
+          <div className="text-xs font-bold text-white font-mono">{trip.busId}</div>
+        </div>
+      </div>
+
+      {/* Telemetry Metrics Grid */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="rounded-xl p-3 bg-slate-950/70 border border-slate-800 text-center">
+          <div className="flex items-center justify-center gap-1 text-[10px] font-semibold text-slate-400 uppercase">
+            <Clock className="w-3 h-3 text-blue-400" />
+            <span>ETA</span>
+          </div>
+          <div className="text-xl font-black text-blue-400 mt-0.5 font-mono">
+            {etaMinutes}<span className="text-xs font-normal text-slate-400 ml-0.5">m</span>
+          </div>
+          <div className="text-[10px] text-slate-400 mt-0.5 truncate">{nextStopName}</div>
+        </div>
+
+        <div className="rounded-xl p-3 bg-slate-950/70 border border-slate-800 text-center">
+          <div className="flex items-center justify-center gap-1 text-[10px] font-semibold text-slate-400 uppercase">
+            <Gauge className="w-3 h-3 text-emerald-400" />
+            <span>Speed</span>
+          </div>
+          <div className="text-xl font-black text-emerald-400 mt-0.5 font-mono">
+            {speed}<span className="text-xs font-normal text-slate-400 ml-0.5">km/h</span>
+          </div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Normal Speed</div>
+        </div>
+
+        <div className="rounded-xl p-3 bg-slate-950/70 border border-slate-800 text-center">
+          <div className="flex items-center justify-center gap-1 text-[10px] font-semibold text-slate-400 uppercase">
+            <User className="w-3 h-3 text-amber-400" />
+            <span>Seat</span>
+          </div>
+          <div className="text-xl font-black text-amber-400 mt-0.5 font-mono">
+            {trip.seatNumber || "14B"}
+          </div>
+          <div className="text-[10px] text-slate-400 mt-0.5 truncate">{trip.passengerName}</div>
+        </div>
+      </div>
+
+      {/* Route Progress */}
+      <div className="rounded-xl p-3.5 bg-slate-950/60 border border-slate-800">
+        <div className="flex items-center justify-between text-xs font-medium mb-2">
+          <div className="flex items-center gap-1.5 text-slate-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="truncate max-w-[120px]">{trip.originStop}</span>
+          </div>
+          <ArrowRight className="w-3 h-3 text-slate-500 shrink-0" />
+          <div className="flex items-center gap-1.5 text-blue-400">
+            <span className="truncate max-w-[120px]">{trip.destinationStop}</span>
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+          </div>
+        </div>
+
+        <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden relative">
+          <div className="h-full w-2/3 bg-blue-500 rounded-full"></div>
+        </div>
+        <div className="flex justify-between text-[10px] text-slate-400 mt-1.5 font-mono">
+          <span>ORIGIN</span>
+          <span className="text-blue-400 font-bold">67% COMPLETED</span>
+          <span>TERMINAL</span>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-2.5">
+        {/* Top Actions Row */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={onOpenAssistant}
+            className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center justify-center gap-2 transition"
+          >
+            <Sparkles className="w-4 h-4 text-blue-400" />
+            <span>AI Co-Pilot</span>
           </button>
 
-          {/* 24h Privacy notice */}
-          <div
-            className="px-3 py-1.5 rounded-xl flex items-center justify-between text-[10px]"
-            style={{
-              background: "rgba(16,185,129,0.04)",
-              border: "1px solid rgba(16,185,129,0.12)",
-              color: "#64748b",
-            }}
+          <button
+            onClick={() => setIsCameraOpen(true)}
+            className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center justify-center gap-2 transition"
           >
-            <span className="flex items-center gap-1.5">
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ background: "#34d399", boxShadow: "0 0 4px #34d399" }}
-              />
-              🔒 Encrypted · 24h Auto-Purge Active
-            </span>
-            <span style={{ color: "#22d3ee", fontFamily: "JetBrains Mono, monospace" }}>24h</span>
-          </div>
+            <Camera className="w-4 h-4 text-emerald-400" />
+            <span>Safety Camera</span>
+          </button>
+        </div>
 
-          {/* SOS + End */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              onClick={onTriggerSOS}
-              className="py-3 px-3 rounded-2xl font-black text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
-              style={
-                isSosActive
-                  ? {
-                      background: "#dc2626",
-                      color: "#fff",
-                      border: "2px solid #f87171",
-                      boxShadow: "0 0 30px rgba(239,68,68,0.7), 0 0 60px rgba(239,68,68,0.3)",
-                      animation: "sos-pulse 1.4s ease infinite",
-                    }
-                  : {
-                      background: "linear-gradient(135deg, #dc2626, #b91c1c)",
-                      color: "#fff",
-                      border: "1px solid rgba(239,68,68,0.5)",
-                      boxShadow: "0 0 20px rgba(239,68,68,0.35), 0 4px 14px rgba(0,0,0,0.5)",
-                    }
-              }
-            >
-              <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-              <span>{isSosActive ? "🚨 SOS ACTIVE" : "🚨 EMERGENCY SOS"}</span>
-            </button>
-
-            <button
-              onClick={handleComplete}
-              className="py-3 px-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                color: "#94a3b8",
-              }}
-            >
-              <CheckCircle className="w-4 h-4" style={{ color: "#34d399" }} />
-              <span>End Journey</span>
-            </button>
+        {/* Digital Ticket Button */}
+        <button
+          onClick={() => setIsTicketOpen(true)}
+          className="w-full py-2.5 px-3.5 rounded-xl bg-blue-950/60 hover:bg-blue-900/60 text-blue-200 border border-blue-800/80 text-xs font-bold flex items-center justify-between transition"
+        >
+          <div className="flex items-center gap-2">
+            <Ticket className="w-4 h-4 text-blue-400" />
+            <span>Digital Smart E-Ticket & QR</span>
           </div>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-800/60 text-blue-300 font-mono">
+            Seat {trip.seatNumber}
+          </span>
+        </button>
+
+        {/* SOS and End Journey */}
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button
+            onClick={onTriggerSOS}
+            className={`py-3 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition shadow ${
+              isSosActive
+                ? "bg-red-600 text-white animate-pulse"
+                : "bg-red-600 hover:bg-red-500 text-white"
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            <span>{isSosActive ? "🚨 SOS TRANSMITTED" : "🚨 EMERGENCY SOS"}</span>
+          </button>
+
+          <button
+            onClick={handleComplete}
+            className="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center justify-center gap-1.5 transition"
+          >
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <span>End Journey</span>
+          </button>
         </div>
       </div>
 
@@ -366,9 +198,10 @@ export default function LiveTripCard({
       <CameraModal
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
-        title="Live Passenger Safety Cam"
-        subtitle={`Live feed from ${bus?.id || "BUS-42A"} · Seat ${trip.seatNumber}`}
-        watermarkText={`SAFEBUS VERIFIED · ${trip.passengerName} · SEAT ${trip.seatNumber}`}
+        title="Live Bus CCTV Safety Feed"
+        subtitle={`Live monitoring from ${bus?.id || "BUS-42A"} • Seat ${trip.seatNumber}`}
+        watermarkText={`SAFEBUS VERIFIED • ${trip.passengerName} • SEAT ${trip.seatNumber}`}
+        busId={trip.busId}
       />
       <DigitalTicketModal
         isOpen={isTicketOpen}

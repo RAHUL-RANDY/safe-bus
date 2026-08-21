@@ -20,12 +20,7 @@ import {
   Video,
   Camera,
   Lock,
-  Sparkles,
   ArrowLeft,
-  Share2,
-  Download,
-  AlertTriangle,
-  Play,
   CheckCircle2,
 } from "lucide-react";
 
@@ -53,7 +48,6 @@ function TicketVerificationContent() {
     };
   }, []);
 
-  // Find trip by ID or fallback to active trip
   const trip =
     trips.find((t) => t.tripId === ticketIdParam || t.tripId.includes(ticketIdParam)) ||
     trips.find((t) => t.status === "active") ||
@@ -106,12 +100,12 @@ function TicketVerificationContent() {
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
-        {/* Top Navigation & Verification Badge */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-slate-900/90 border border-cyan-500/30 shadow-2xl">
+        {/* Top Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 shadow">
           <div className="flex items-center gap-3">
             <Link
               href="/passenger"
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
               title="Back to Passenger App"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -119,115 +113,115 @@ function TicketVerificationContent() {
 
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-black text-white">
-                  SafeBus Live Ticket & Safety Portal
+                <h1 className="text-base sm:text-lg font-bold text-white">
+                  SafeBus Digital Smart Ticket
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-800 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
                   VERIFIED VALID
                 </span>
               </div>
-              <p className="text-xs text-slate-300">
-                Live QR Ticket Inspection • GPS Telematics • Realtime Video & Camera Access
+              <p className="text-xs text-slate-400">
+                Official Public Transit Electronic Travel Document
               </p>
             </div>
           </div>
 
           <div className="text-right font-mono">
-            <div className="text-[10px] uppercase text-slate-400">PNR Number</div>
-            <div className="text-xs sm:text-sm font-bold text-cyan-300">{displayPnr}</div>
+            <div className="text-[10px] uppercase text-slate-400">PNR Reference</div>
+            <div className="text-xs sm:text-sm font-bold text-blue-400">{displayPnr}</div>
           </div>
         </div>
 
-        {/* 3 Portal Tabs: Details, Live Camera, and Saved Videos */}
-        <div className="grid grid-cols-3 gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10 shadow-inner">
+        {/* 3 Portal Tabs */}
+        <div className="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
           <button
             onClick={() => setActiveTab("details")}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
               activeTab === "details"
-                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25"
-                : "text-slate-300 hover:text-white hover:bg-white/5"
+                ? "bg-blue-600 text-white shadow"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
             <Ticket className="w-4 h-4" />
-            <span className="hidden sm:inline">1. Customer & Ticket Details</span>
+            <span className="hidden sm:inline">1. Ticket & Route</span>
             <span className="sm:hidden">Ticket</span>
           </button>
 
           <button
             onClick={() => setActiveTab("live_camera")}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
               activeTab === "live_camera"
-                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25"
-                : "text-slate-300 hover:text-white hover:bg-white/5"
+                ? "bg-blue-600 text-white shadow"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <Camera className="w-4 h-4 text-cyan-300" />
-            <span className="hidden sm:inline">2. Live Camera & Bus Tracking</span>
+            <Camera className="w-4 h-4" />
+            <span className="hidden sm:inline">2. Live Bus Tracking</span>
             <span className="sm:hidden">Live Cam</span>
           </button>
 
           <button
             onClick={() => setActiveTab("saved_videos")}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
               activeTab === "saved_videos"
-                ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25"
-                : "text-slate-300 hover:text-white hover:bg-white/5"
+                ? "bg-blue-600 text-white shadow"
+                : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <Video className="w-4 h-4 text-cyan-300" />
-            <span className="hidden sm:inline">3. Saved Video Vault (24h)</span>
-            <span className="sm:hidden">24h Vault</span>
+            <Video className="w-4 h-4" />
+            <span className="hidden sm:inline">3. 24h Video Vault</span>
+            <span className="sm:hidden">Vault</span>
           </button>
         </div>
 
-        {/* TAB 1: CUSTOMER & TICKET DETAILS */}
+        {/* TAB 1: TICKET DETAILS */}
         {activeTab === "details" && (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             {/* Main Ticket Card (7 Cols) */}
-            <div className="md:col-span-7 glass-panel p-6 rounded-3xl border border-cyan-500/40 shadow-2xl bg-slate-900/90 space-y-5">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <div className="md:col-span-7 p-6 rounded-2xl border border-slate-800 bg-slate-900 shadow space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">
-                    Official Transit E-Ticket
+                  <div className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
+                    Electronic Transit Ticket
                   </div>
-                  <h2 className="text-lg font-black text-white">{trip.routeName}</h2>
+                  <h2 className="text-lg font-bold text-white">{trip.routeName}</h2>
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] text-slate-400 font-mono">Seat Number</div>
-                  <div className="text-xl font-black font-mono text-cyan-300">{trip.seatNumber}</div>
+                  <div className="text-xl font-black font-mono text-amber-400">{trip.seatNumber}</div>
                 </div>
               </div>
 
-              {/* Origin -> Destination Route Stops */}
-              <div className="p-4 rounded-2xl bg-slate-950/70 border border-white/10 flex items-center justify-between gap-3">
+              {/* Origin -> Destination */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-[10px] text-slate-400">Boarding Station</div>
-                  <div className="text-sm font-black text-white">{trip.originStop}</div>
+                  <div className="text-[10px] text-slate-400">Boarding Point</div>
+                  <div className="text-sm font-bold text-white">{trip.originStop}</div>
                 </div>
-                <div className="text-center font-mono text-[10px] text-cyan-400 px-2">
+                <div className="text-center font-mono text-xs text-blue-400 px-2">
                   <span>───►</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] text-slate-400">Destination Hub</div>
-                  <div className="text-sm font-black text-white">{trip.destinationStop}</div>
+                  <div className="text-[10px] text-slate-400">Destination</div>
+                  <div className="text-sm font-bold text-white">{trip.destinationStop}</div>
                 </div>
               </div>
 
-              {/* Passenger & Emergency Contact Grid */}
-              <div className="grid grid-cols-2 gap-4 text-xs pt-1 border-b border-white/10 pb-4">
+              {/* Details Grid */}
+              <div className="grid grid-cols-2 gap-4 text-xs pt-1 border-b border-slate-800 pb-4">
                 <div>
                   <div className="text-[10px] text-slate-400 uppercase font-semibold">Passenger Name</div>
                   <div className="text-white font-bold flex items-center gap-1.5 mt-1">
-                    <User className="w-3.5 h-3.5 text-cyan-400" />
+                    <User className="w-3.5 h-3.5 text-blue-400" />
                     <span>{trip.passengerName}</span>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Assigned Bus Unit</div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Vehicle Unit</div>
                   <div className="text-white font-bold font-mono flex items-center gap-1.5 mt-1">
-                    <BusIcon className="w-3.5 h-3.5 text-cyan-400" />
+                    <BusIcon className="w-3.5 h-3.5 text-blue-400" />
                     <span>{bus.id} ({bus.plateNumber})</span>
                   </div>
                 </div>
@@ -235,108 +229,99 @@ function TicketVerificationContent() {
                 <div>
                   <div className="text-[10px] text-slate-400 uppercase font-semibold">Emergency Contact</div>
                   <div className="text-slate-200 font-mono flex items-center gap-1.5 mt-1">
-                    <Phone className="w-3.5 h-3.5 text-cyan-400" />
+                    <Phone className="w-3.5 h-3.5 text-blue-400" />
                     <span>{trip.emergencyContact?.phone || "+91 98765 43210"}</span>
                   </div>
                 </div>
 
                 <div>
                   <div className="text-[10px] text-slate-400 uppercase font-semibold">Fare Paid</div>
-                  <div className="text-emerald-400 font-black font-mono text-sm mt-0.5">
-                    ₹45.00 (Transit Pay)
+                  <div className="text-emerald-400 font-bold font-mono text-sm mt-0.5">
+                    ₹45.00 (Transit Pass)
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Actions */}
               <div className="flex items-center gap-3 pt-2">
                 <button
                   onClick={() => setActiveTab("live_camera")}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-lg"
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>Open Live Bus Camera</span>
+                  <span>View Live Bus Camera</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("saved_videos")}
-                  className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-white/10 transition"
+                  className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition"
                 >
                   <Video className="w-4 h-4" />
-                  <span>Saved 24h Videos</span>
+                  <span>24h Video Vault</span>
                 </button>
               </div>
             </div>
 
             {/* QR Code Verification Card (5 Cols) */}
-            <div className="md:col-span-5 glass-panel p-6 rounded-3xl border border-white/15 shadow-2xl bg-slate-900/90 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="p-4 bg-white rounded-3xl shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+            <div className="md:col-span-5 p-6 rounded-2xl border border-slate-800 bg-slate-900 shadow flex flex-col items-center justify-center text-center space-y-4">
+              <div className="p-4 bg-white rounded-2xl shadow">
                 <QrCode className="w-36 h-36 text-slate-950" />
               </div>
               <div>
-                <div className="text-sm font-bold text-white">Interactive Live QR Code</div>
+                <div className="text-sm font-bold text-white">Digital Travel QR Code</div>
                 <p className="text-xs text-slate-400 mt-1 max-w-xs">
-                  Scan this live QR code from any smartphone to instantly inspect this passenger&apos;s trip status, GPS telemetry, and camera access.
+                  Scan at vehicle validator or show to ticket inspector for instant verification.
                 </p>
               </div>
 
-              <div className="w-full p-3 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-300 font-mono flex items-center justify-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-cyan-400" />
-                <span>AES-256 TELEMATICS ENCRYPTED</span>
+              <div className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono flex items-center justify-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                <span>AES-256 DIGITAL SIGNATURE VALID</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 2: LIVE CAMERA & BUS TRACKING */}
+        {/* TAB 2: LIVE CAMERA */}
         {activeTab === "live_camera" && (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            {/* Live Camera Viewfinder (7 Cols) */}
-            <div className="md:col-span-7 glass-panel p-5 rounded-3xl border border-cyan-500/40 shadow-2xl bg-slate-900/90 space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+            <div className="md:col-span-7 p-5 rounded-2xl border border-slate-800 bg-slate-900 shadow space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-sm font-bold text-white">Live On-Bus Safety Camera</h3>
+                  <Camera className="w-4 h-4 text-blue-400" />
+                  <h3 className="text-sm font-bold text-white">Live On-Bus Camera</h3>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-800 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   STREAMING LIVE
                 </span>
               </div>
 
-              {/* Viewfinder Box */}
-              <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-white/15 flex items-center justify-center shadow-inner">
-                <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6 text-center">
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center">
+                <div className="w-full h-full bg-slate-950 flex items-center justify-center p-6 text-center">
                   <div>
-                    <Camera className="w-10 h-10 text-cyan-400 mx-auto mb-2 animate-pulse" />
-                    <div className="text-sm font-bold text-white">Bus {bus.id} • Cabin Aisle Cam</div>
+                    <Camera className="w-10 h-10 text-blue-400 mx-auto mb-2" />
+                    <div className="text-sm font-bold text-white">Bus {bus.id} • Cabin Stream</div>
                     <div className="text-xs text-slate-400 mt-1">
                       Passenger: {trip.passengerName} (Seat {trip.seatNumber})
                     </div>
                   </div>
                 </div>
 
-                {/* HUD Overlay */}
                 <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300 bg-slate-950/70 px-2 py-1 rounded">
+                  <div className="flex items-center justify-between text-xs font-mono text-blue-300 bg-black/80 px-2 py-1 rounded">
                     <span>GPS: {bus.currentLocation.lat.toFixed(4)}° N, {bus.currentLocation.lng.toFixed(4)}° E</span>
                     <span>SPEED: {bus.speed} KM/H</span>
                   </div>
-                  <div className="text-[10px] font-mono text-slate-300 bg-slate-950/70 px-2 py-1 rounded self-start">
+                  <div className="text-xs font-mono text-slate-300 bg-black/80 px-2 py-1 rounded self-start">
                     SAFEBUS TICKET VERIFIED • {displayPnr}
                   </div>
                 </div>
               </div>
-
-              <div className="p-3 rounded-2xl bg-cyan-950/40 border border-cyan-500/25 text-xs text-slate-300 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>Authorized live visual tracking enabled for ticket holder & guardian.</span>
-              </div>
             </div>
 
-            {/* Live GPS Map (5 Cols) */}
-            <div className="md:col-span-5 flex flex-col gap-4 h-[420px]">
-              <div className="flex-1 rounded-3xl overflow-hidden border border-white/15 shadow-2xl">
+            <div className="md:col-span-5 flex flex-col gap-4 h-[380px]">
+              <div className="flex-1 rounded-2xl overflow-hidden border border-slate-800 shadow">
                 <InteractiveMap
                   buses={[bus]}
                   activeBusId={bus.id}
@@ -345,44 +330,44 @@ function TicketVerificationContent() {
                 />
               </div>
 
-              <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center justify-between text-xs">
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
                 <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-bold">Next Transit Hub</div>
+                  <div className="text-[10px] text-slate-400 uppercase font-bold">Next Transit Stop</div>
                   <div className="text-white font-bold">{bus.nextStop}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] text-slate-400 uppercase font-bold">ETA</div>
-                  <div className="text-cyan-300 font-bold font-mono">~{bus.etaMinutes} mins</div>
+                  <div className="text-blue-400 font-bold font-mono">~{bus.etaMinutes} mins</div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 3: SAVED VIDEO VAULT & 24H PURGE */}
+        {/* TAB 3: SAVED VIDEOS */}
         {activeTab === "saved_videos" && (
-          <div className="glass-panel p-6 rounded-3xl border border-cyan-500/40 shadow-2xl bg-slate-900/90 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900 shadow space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2.5">
-                <Video className="w-5 h-5 text-cyan-400" />
+                <Video className="w-5 h-5 text-blue-400" />
                 <div>
-                  <h3 className="text-sm font-bold text-white">24-Hour Ephemeral Saved Video Vault</h3>
+                  <h3 className="text-sm font-bold text-white">24-Hour Video Vault</h3>
                   <p className="text-xs text-slate-400">
-                    Recorded footage linked to this ride • Auto-deleted 24 hours after trip completion
+                    Recorded footage linked to this ride • Automatically purged 24 hours after journey
                   </p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold border border-cyan-500/30">
+              <span className="px-2.5 py-1 rounded bg-blue-950 text-blue-300 font-mono text-[10px] font-bold border border-blue-800">
                 🔒 24H PURGE ACTIVE
               </span>
             </div>
 
             <div className="space-y-3">
               {tripRecordings.length === 0 ? (
-                <div className="p-8 text-center bg-slate-950/60 rounded-2xl border border-white/10">
+                <div className="p-8 text-center bg-slate-950 rounded-xl border border-slate-800">
                   <Video className="w-8 h-8 text-slate-500 mx-auto mb-2" />
                   <div className="text-xs font-bold text-slate-300">No Video Clips Recorded Yet</div>
-                  <p className="text-[11px] text-slate-500 mt-1 max-w-sm mx-auto">
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                     When you record safety clips via the passenger camera or on-board CCTV, they appear here with AES-256 encryption.
                   </p>
                 </div>
@@ -390,10 +375,10 @@ function TicketVerificationContent() {
                 tripRecordings.map((rec) => (
                   <div
                     key={rec.id}
-                    className="p-4 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-wrap items-center justify-between gap-3"
+                    className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-lg bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800">
                         <Video className="w-4 h-4" />
                       </div>
                       <div>
@@ -405,7 +390,7 @@ function TicketVerificationContent() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                      <span className="text-[10px] font-mono text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
                         {rec.isIncidentPreserved ? "🛡️ PRESERVED FOR SOS" : "EXPIRES IN 24H"}
                       </span>
                     </div>

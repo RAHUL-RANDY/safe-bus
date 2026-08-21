@@ -355,6 +355,19 @@ class SyncEngine {
     this.alertListeners.forEach((cb) => cb([...this.alerts]));
   }
 
+  public async updateBusTelemetry(busId: string, telemetry: Partial<Bus>): Promise<void> {
+    const idx = this.buses.findIndex((b) => b.id === busId);
+    if (idx !== -1) {
+      this.buses[idx] = { ...this.buses[idx], ...telemetry, lastUpdated: Date.now() };
+      this.saveBuses(this.buses);
+      this.broadcast({ type: "BUSES_UPDATE", payload: this.buses });
+      this.notifyBuses();
+      if (isSupabaseConfigured()) {
+        await upsertSupabaseBus(this.buses[idx]);
+      }
+    }
+  }
+
   // State actions
   public async createTrip(trip: Trip): Promise<Trip> {
     this.trips = [trip, ...this.trips.filter((t) => t.tripId !== trip.tripId)];

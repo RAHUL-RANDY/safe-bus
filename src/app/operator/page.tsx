@@ -12,11 +12,7 @@ import {
   ShieldAlert,
   Bus as BusIcon,
   Users,
-  Activity,
-  Zap,
-  Radio,
   Clock,
-  ShieldCheck,
 } from "lucide-react";
 
 export default function OperatorPage() {
@@ -72,10 +68,10 @@ export default function OperatorPage() {
 
       {/* Emergency Global Alert Banner */}
       {isEmergencyActive && (
-        <div className="bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white px-4 py-2 text-center text-xs font-black tracking-wider flex items-center justify-center gap-2 animate-pulse shadow-lg">
-          <ShieldAlert className="w-4 h-4" />
+        <div className="bg-red-600 text-white px-4 py-2 text-center text-xs font-bold tracking-wider flex items-center justify-center gap-2 shadow">
+          <ShieldAlert className="w-4 h-4 animate-ping" />
           <span>
-            URGENT: {openAlertsCount} ACTIVE SOS EMERGENCY INCIDENT(S) TRANSMITTING • IMMEDIATE OPERATOR DISPATCH REQUIRED
+            CRITICAL: {openAlertsCount} ACTIVE SOS EMERGENCY INCIDENT(S) TRANSMITTING • IMMEDIATE OPERATOR INTERVENTION REQUIRED
           </span>
         </div>
       )}
@@ -83,8 +79,8 @@ export default function OperatorPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
         {/* Operator KPI Summary Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center gap-3 shadow-lg">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center border border-cyan-500/30">
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3 shadow">
+            <div className="w-10 h-10 rounded-xl bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800 font-bold">
               <BusIcon className="w-5 h-5" />
             </div>
             <div>
@@ -93,8 +89,8 @@ export default function OperatorPage() {
             </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center gap-3 shadow-lg">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center border border-blue-500/30">
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3 shadow">
+            <div className="w-10 h-10 rounded-xl bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800 font-bold">
               <Users className="w-5 h-5" />
             </div>
             <div>
@@ -104,23 +100,23 @@ export default function OperatorPage() {
           </div>
 
           <div
-            className={`p-4 rounded-2xl border flex items-center gap-3 shadow-lg transition-all ${
+            className={`p-4 rounded-xl border flex items-center gap-3 shadow transition ${
               isEmergencyActive
-                ? "glass-panel-danger border-red-500 animate-pulse"
-                : "glass-panel border-white/10"
+                ? "bg-red-950/60 border-red-600"
+                : "bg-slate-900 border-slate-800"
             }`}
           >
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                 isEmergencyActive
-                  ? "bg-red-600 text-white shadow-[0_0_15px_#EF4444]"
-                  : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  ? "bg-red-600 text-white"
+                  : "bg-emerald-950 text-emerald-400 border border-emerald-800"
               }`}
             >
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">SOS Alerts</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400">Active SOS</div>
               <div
                 className={`text-xl font-black font-mono ${
                   isEmergencyActive ? "text-red-400" : "text-emerald-400"
@@ -131,8 +127,8 @@ export default function OperatorPage() {
             </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center gap-3 shadow-lg">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center border border-amber-500/30">
+          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3 shadow">
+            <div className="w-10 h-10 rounded-xl bg-amber-950 text-amber-400 flex items-center justify-center border border-amber-800 font-bold">
               <Clock className="w-5 h-5" />
             </div>
             <div>
@@ -145,7 +141,7 @@ export default function OperatorPage() {
         {/* Main Grid: Map & Side Feeds */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Main Fleet Map */}
-          <div className="lg:col-span-8 flex flex-col gap-4 h-[500px] sm:h-[580px] lg:h-[720px]">
+          <div className="lg:col-span-8 flex flex-col gap-4 h-[460px] sm:h-[520px] lg:h-[680px] rounded-2xl overflow-hidden border border-slate-800 shadow">
             <InteractiveMap
               buses={buses}
               activeBusId={selectedBusId}
@@ -157,8 +153,8 @@ export default function OperatorPage() {
           </div>
 
           {/* Right Feeds Column: Live Alerts & Fleet Units */}
-          <div className="lg:col-span-4 flex flex-col gap-6 h-[720px]">
-            <div className="flex-1 min-h-[340px]">
+          <div className="lg:col-span-4 flex flex-col gap-5 h-[680px]">
+            <div className="flex-1 min-h-[320px]">
               <LiveAlertsFeed
                 alerts={alerts}
                 onAcknowledge={handleAcknowledge}
@@ -167,7 +163,7 @@ export default function OperatorPage() {
               />
             </div>
 
-            <div className="flex-1 min-h-[320px]">
+            <div className="flex-1 min-h-[300px]">
               <FleetListPanel
                 buses={buses}
                 selectedBusId={selectedBusId}
