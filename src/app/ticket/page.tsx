@@ -255,7 +255,7 @@ function TicketBookingAndPaymentContent() {
       // Step 2: If Razorpay SDK is loaded on window, open official checkout
       if (typeof window !== "undefined" && window.Razorpay) {
         const options = {
-          key: orderData.keyId || "rzp_test_SafeBusTransit2026",
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || orderData.keyId || "rzp_test_TSYUs8kWbReZOK",
           amount: orderData.amount,
           currency: orderData.currency || "INR",
           name: "SafeBus Nexus Transit",

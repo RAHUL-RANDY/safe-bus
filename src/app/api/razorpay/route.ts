@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { amount, currency = "INR", receipt, passengerName, routeName } = body;
 
-    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "rzp_test_SafeBusTransit2026";
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "rzp_test_TSYUs8kWbReZOK";
     const keySecret = process.env.RAZORPAY_KEY_SECRET || "SafeBusSecretKey2026Mock";
 
     // If live/valid credentials exist, initialize real Razorpay instance
