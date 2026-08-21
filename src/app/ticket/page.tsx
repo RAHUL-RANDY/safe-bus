@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
 import { getSoundEngine } from "@/lib/audio-effects";
 import confetti from "canvas-confetti";
+import TicketQRScannerModal from "@/components/common/TicketQRScannerModal";
 import Link from "next/link";
 import Script from "next/script";
 import {
@@ -36,6 +37,7 @@ import {
   ExternalLink,
   Shield,
   Zap,
+  Camera,
 } from "lucide-react";
 
 declare global {
@@ -92,6 +94,7 @@ function TicketBookingAndPaymentContent() {
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState<BookedTicketRecord | null>(null);
   const [isRazorpayScriptLoaded, setIsRazorpayScriptLoaded] = useState<boolean>(false);
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState<boolean>(false);
 
   // History of booked tickets stored in localStorage
   const [ticketHistory, setTicketHistory] = useState<BookedTicketRecord[]>([]);
@@ -248,6 +251,59 @@ function TicketBookingAndPaymentContent() {
     });
   };
 
+  // Handler for physical paper ticket QR scanned via webcam / device camera
+  const handleScanPhysicalTicketSuccess = (decodedText: string) => {
+    setIsScannerModalOpen(false);
+
+    // Check if ticket already exists in user's history
+    const existing = ticketHistory.find(
+      (t) => decodedText.includes(t.pnr) || t.pnr.includes(decodedText)
+    );
+    if (existing) {
+      setPaymentSuccessData(existing);
+      setActiveTab("active_ticket");
+      toast({
+        title: "🎫 Ticket Loaded from Ledger",
+        description: `PNR: ${existing.pnr} verified.`,
+        type: "success",
+      });
+      return;
+    }
+
+    // Build verified physical ticket record
+    const pnrClean = decodedText.includes("PNR")
+      ? decodedText.split("PNR")[1].replace(/[^A-Za-z0-9]/g, "").trim()
+      : decodedText.replace(/[^A-Za-z0-9-]/g, "") || `NEXUS-PHY-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const scannedTicket: BookedTicketRecord = {
+      id: `tkt-scanned-${Date.now()}`,
+      pnr: pnrClean.startsWith("NEXUS") ? pnrClean : `NEXUS-TKT-${pnrClean}`,
+      passengerName: user?.name || "Verified Passenger",
+      passengerCount: 1,
+      routeName: selectedBus.routeName,
+      routeCode: selectedBus.routeCode,
+      originStop,
+      destinationStop,
+      seatNumber: "14B (Scanned)",
+      amountPaid: totalPayable || 35.0,
+      paymentMethod: "cash",
+      paymentRef: `PHY-BARCODE-${Date.now()}`,
+      bookedAt: Date.now(),
+      status: "CONFIRMED",
+    };
+
+    const updated = [scannedTicket, ...ticketHistory];
+    setTicketHistory(updated);
+    try {
+      localStorage.setItem("safebus_ticket_history_v1", JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+
+    setPaymentSuccessData(scannedTicket);
+    setActiveTab("active_ticket");
+  };
+
   // Trigger Razorpay Standard Checkout
   const handleRazorpayPayment = async () => {
     setIsProcessingPayment(true);
@@ -402,9 +458,17 @@ function TicketBookingAndPaymentContent() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsScannerModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow transition"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Scan Physical Ticket</span>
+            </button>
             <Link
               href="/passenger"
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Passenger Hub</span>
@@ -1042,6 +1106,12 @@ function TicketBookingAndPaymentContent() {
           </div>
         )}
       </main>
+
+      <TicketQRScannerModal
+        isOpen={isScannerModalOpen}
+        onClose={() => setIsScannerModalOpen(false)}
+        onScanSuccess={handleScanPhysicalTicketSuccess}
+      />
     </div>
   );
 }

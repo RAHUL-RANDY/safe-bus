@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { Trip } from "@/types";
-import { Bus, QrCode, Shield, User, Phone, MapPin, CheckCircle2, ArrowRight } from "lucide-react";
+import { Bus, QrCode, Shield, User, Phone, MapPin, CheckCircle2, ArrowRight, Camera } from "lucide-react";
+import TicketQRScannerModal from "@/components/common/TicketQRScannerModal";
 
 interface PassengerCheckInProps {
   onStartTrip: (tripData: Omit<Trip, "tripId" | "startedAt" | "currentLocation">) => void;
@@ -15,6 +16,7 @@ export default function PassengerCheckIn({ onStartTrip }: PassengerCheckInProps)
   const [emergencyPhone, setEmergencyPhone] = useState("+91 98765 43210");
   const [isScanning, setIsScanning] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
 
   const handleSimulateScan = () => {
     setIsScanning(true);
@@ -25,6 +27,14 @@ export default function PassengerCheckIn({ onStartTrip }: PassengerCheckInProps)
         handleSubmit();
       }, 600);
     }, 1000);
+  };
+
+  const handleCameraScanSuccess = (decodedText: string) => {
+    setIsCameraScannerOpen(false);
+    setScanSuccess(true);
+    setTimeout(() => {
+      handleSubmit();
+    }, 600);
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -49,124 +59,130 @@ export default function PassengerCheckIn({ onStartTrip }: PassengerCheckInProps)
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto rounded-2xl bg-slate-900 border border-slate-800 shadow-xl p-6 flex flex-col gap-5">
-      {/* Header */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950 border border-blue-800 text-blue-300 text-xs font-semibold mb-2">
-          <Shield className="w-3.5 h-3.5" />
-          <span>Smart Passenger Boarding</span>
-        </div>
-        <h2 className="text-xl font-bold text-white tracking-tight">
-          Board Your Bus
-        </h2>
-        <p className="text-xs text-slate-400 mt-1">
-          Scan QR tag at bus door or enter seat details to begin live journey
-        </p>
-      </div>
-
-      {/* QR Simulation Card */}
-      <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 text-center flex flex-col items-center gap-3">
-        <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center">
-          {isScanning ? (
-            <QrCode className="w-8 h-8 text-blue-400 animate-pulse" />
-          ) : scanSuccess ? (
-            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-          ) : (
-            <QrCode className="w-8 h-8 text-blue-400" />
-          )}
+    <>
+      <div className="w-full max-w-lg mx-auto rounded-2xl bg-slate-900 border border-slate-800 shadow-xl p-6 flex flex-col gap-5">
+        {/* Header */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950 border border-blue-800 text-blue-300 text-xs font-semibold mb-2">
+            <Shield className="w-3.5 h-3.5" />
+            <span>Smart Passenger Boarding</span>
+          </div>
+          <h2 className="text-xl font-bold text-white tracking-tight">
+            Board Your Bus
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            Scan physical printed ticket, mobile QR tag, or enter seat details
+          </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSimulateScan}
-          disabled={isScanning || scanSuccess}
-          className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow transition"
-        >
-          {isScanning ? (
-            <span>Verifying Bus Tag...</span>
-          ) : scanSuccess ? (
-            <span>Verified! Loading Trip...</span>
-          ) : (
-            <span>1-Click Scan Bus QR Code</span>
-          )}
-        </button>
-      </div>
-
-      {/* Manual Details Form */}
-      <form onSubmit={handleSubmit} className="space-y-3.5">
-        <div>
-          <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-            Passenger Name
-          </label>
-          <input
-            type="text"
-            value={passengerName}
-            onChange={(e) => setPassengerName(e.target.value)}
-            required
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
-            placeholder="e.g. Rahul Sharma"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-              Select Bus Route
-            </label>
-            <select
-              value={selectedRoute}
-              onChange={(e) => setSelectedRoute(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
-            >
-              <option value="42A">Route 42A • Metro Express</option>
-              <option value="18B">Route 18B • Airport Direct</option>
-            </select>
+        {/* QR Scanner Buttons */}
+        <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 text-center flex flex-col items-center gap-3">
+          <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center">
+            {isScanning ? (
+              <QrCode className="w-8 h-8 text-blue-400 animate-pulse" />
+            ) : scanSuccess ? (
+              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            ) : (
+              <QrCode className="w-8 h-8 text-blue-400" />
+            )}
           </div>
 
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <button
+              type="button"
+              onClick={() => setIsCameraScannerOpen(true)}
+              className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Camera Live Scan</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSimulateScan}
+              disabled={isScanning || scanSuccess}
+              className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>1-Click Test Scan</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Manual Details Form */}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-              Seat Number
+              Passenger Name
             </label>
             <input
               type="text"
-              value={seatNumber}
-              onChange={(e) => setSeatNumber(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
-              placeholder="14B"
+              value={passengerName}
+              onChange={(e) => setPassengerName(e.target.value)}
+              required
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+              placeholder="e.g. Rahul Sharma"
             />
           </div>
-        </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-            Emergency SOS Contact Phone
-          </label>
-          <input
-            type="tel"
-            value={emergencyPhone}
-            onChange={(e) => setEmergencyPhone(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
-            placeholder="+91 98765 43210"
-          />
-        </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                Select Bus Route
+              </label>
+              <select
+                value={selectedRoute}
+                onChange={(e) => setSelectedRoute(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
+              >
+                <option value="42A">Route 42A (Metro Tech)</option>
+                <option value="18B">Route 18B (Airport Direct)</option>
+              </select>
+            </div>
 
-        <button
-          type="submit"
-          className="w-full mt-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow transition flex items-center justify-center gap-2"
-        >
-          <span>Start Journey</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                Seat Number
+              </label>
+              <input
+                type="text"
+                value={seatNumber}
+                onChange={(e) => setSeatNumber(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                placeholder="14B"
+              />
+            </div>
+          </div>
 
-        <div className="pt-2 border-t border-slate-800 text-center">
-          <a
-            href="/ticket"
-            className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center justify-center gap-1.5 transition"
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+              Emergency Contact Phone
+            </label>
+            <input
+              type="tel"
+              value={emergencyPhone}
+              onChange={(e) => setEmergencyPhone(e.target.value)}
+              required
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition"
+              placeholder="+91 98765 43210"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition mt-2"
           >
-            <span>🎟️ Need a ticket? Book & Pay Online via UPI / Card →</span>
-          </a>
-        </div>
-      </form>
-    </div>
+            <span>Start Live Bus Journey</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </form>
+      </div>
+
+      <TicketQRScannerModal
+        isOpen={isCameraScannerOpen}
+        onClose={() => setIsCameraScannerOpen(false)}
+        onScanSuccess={handleCameraScanSuccess}
+      />
+    </>
   );
 }
