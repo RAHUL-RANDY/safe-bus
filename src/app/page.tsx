@@ -265,15 +265,20 @@ export default function SplitDemoPage() {
             {/* 3. Fleet Command */}
             <Link
               href="/operator"
-              className="p-4 rounded-2xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 transition group flex flex-col justify-between gap-3 shadow-sm"
+              className="p-4 rounded-2xl bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 transition group flex flex-col justify-between gap-3 shadow-sm relative"
             >
               <div className="flex items-start justify-between">
                 <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold">
                   <LayoutDashboard className="w-5 h-5" />
                 </div>
-                <span className="text-xs text-indigo-400 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                  Open Command →
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-950 text-red-400 border border-red-800 font-mono">
+                    ADMIN ONLY
+                  </span>
+                  <span className="text-xs text-indigo-400 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    Open Command →
+                  </span>
+                </div>
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white">Fleet Operator Command</h3>
