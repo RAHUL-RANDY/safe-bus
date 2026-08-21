@@ -147,7 +147,7 @@ export default function DriverCockpitPanel({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    if (isLocalWebcamActive && videoRef.current) {
+    if (feedMode === "webcam" && videoRef.current) {
       ctx.drawImage(videoRef.current, 0, 0, 640, 360);
     } else {
       // Draw telemetry visual frame
