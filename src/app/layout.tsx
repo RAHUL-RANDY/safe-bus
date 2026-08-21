@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
+import { ToastProvider } from "@/lib/toast-context";
 
 export const metadata: Metadata = {
   title: "SafeBus Nexus — Where AI Protects Every Journey",
@@ -15,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark h-full antialiased" data-theme="cyber">
+    <html lang="en" className="dark h-full antialiased" data-theme="dark">
       <head>
         {/* Google Fonts – must be in <head> not CSS for proper PostCSS ordering */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -33,7 +34,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col text-slate-100">
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

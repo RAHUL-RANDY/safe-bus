@@ -8,6 +8,9 @@ import { getSyncEngine } from "@/lib/sync-engine";
 import { ROUTE_STOPS, INITIAL_BUSES } from "@/lib/route-data";
 import { Bus, Trip } from "@/types";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/lib/toast-context";
+import { getSoundEngine } from "@/lib/audio-effects";
+import confetti from "canvas-confetti";
 import Link from "next/link";
 import Script from "next/script";
 import {
@@ -62,6 +65,7 @@ function TicketBookingAndPaymentContent() {
   const searchParams = useSearchParams();
   const ticketIdParam = searchParams.get("id");
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"book" | "active_ticket" | "history">(
     ticketIdParam ? "active_ticket" : "book"
@@ -228,6 +232,20 @@ function TicketBookingAndPaymentContent() {
     setPaymentSuccessData(newTicket);
     setIsProcessingPayment(false);
     setActiveTab("active_ticket");
+
+    // Expressive Delight: Confetti burst & audio chime
+    getSoundEngine().playSuccess();
+    confetti({
+      particleCount: 100,
+      spread: 75,
+      origin: { y: 0.6 },
+    });
+
+    toast({
+      title: "🎉 Ticket Confirmed & Verified!",
+      description: `PNR: ${newTicket.pnr} • ₹${newTicket.amountPaid.toFixed(2)} paid via ${newTicket.paymentMethod.toUpperCase()}`,
+      type: "success",
+    });
   };
 
   // Trigger Razorpay Standard Checkout

@@ -33,6 +33,9 @@ import {
   RotateCw,
 } from "lucide-react";
 
+import { getSoundEngine } from "@/lib/audio-effects";
+import { useToast } from "@/lib/toast-context";
+
 interface DriverCockpitPanelProps {
   bus: Bus;
   onUpdateBus?: (updated: Bus) => void;
@@ -44,6 +47,7 @@ export default function DriverCockpitPanel({
   bus,
   onUpdateBus,
 }: DriverCockpitPanelProps) {
+  const { toast } = useToast();
   const [speed, setSpeed] = useState<number>(bus.speed || 45);
   const [doorsLocked, setDoorsLocked] = useState<boolean>(true);
   const [occupancy, setOccupancy] = useState<number>(bus.occupancy || 28);
@@ -145,19 +149,34 @@ export default function DriverCockpitPanel({
   const handleSpeedChange = (delta: number) => {
     const newSpeed = Math.max(0, Math.min(100, speed + delta));
     setSpeed(newSpeed);
+    getSoundEngine().playClick();
     const updated = { ...bus, speed: newSpeed };
     if (onUpdateBus) onUpdateBus(updated);
     getSyncEngine().updateBusTelemetry(bus.id, { speed: newSpeed });
+    if (newSpeed >= 75) {
+      toast({
+        title: "Speed Anomaly Warning",
+        description: `Vehicle speed at ${newSpeed} km/h is approaching safe city limit.`,
+        type: "warning",
+      });
+    }
   };
 
   const handleToggleDoors = () => {
     const nextLocked = !doorsLocked;
     setDoorsLocked(nextLocked);
+    getSoundEngine().playPneumaticDoor();
+    toast({
+      title: nextLocked ? "Pneumatic Doors Secured" : "Pneumatic Doors Released",
+      description: nextLocked ? "All entry & exit doors locked for high-speed transit." : "Passenger entry & exit enabled at corridor platform.",
+      type: nextLocked ? "info" : "warning",
+    });
   };
 
   const handlePassengerCountChange = (delta: number) => {
     const newCount = Math.max(0, Math.min(bus.capacity, occupancy + delta));
     setOccupancy(newCount);
+    getSoundEngine().playClick();
     const updated = { ...bus, occupancy: newCount };
     if (onUpdateBus) onUpdateBus(updated);
     getSyncEngine().updateBusTelemetry(bus.id, { occupancy: newCount });
