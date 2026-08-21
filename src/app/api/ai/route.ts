@@ -67,13 +67,32 @@ export async function POST(req: NextRequest) {
       try {
         const ai = new GoogleGenAI({ apiKey: geminiApiKey });
         const prompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nPassenger: ${message}\nNexus AI:`;
-        const result = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: prompt,
-        });
+        
+        const preferredModel = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+        const candidateModels = [
+          preferredModel,
+          "gemini-3.6-flash",
+          "gemini-3.7-flash",
+          "gemini-2.5-flash",
+          "gemini-flash-latest",
+          "gemini-2.5-pro",
+        ];
 
-        responseText = result.text || "";
-        providerUsed = "gemini";
+        for (const modelName of candidateModels) {
+          try {
+            const result = await ai.models.generateContent({
+              model: modelName,
+              contents: prompt,
+            });
+            if (result.text) {
+              responseText = result.text;
+              providerUsed = `gemini (${modelName})`;
+              break;
+            }
+          } catch (modelErr: any) {
+            console.warn(`Gemini model ${modelName} attempt:`, modelErr?.message || modelErr);
+          }
+        }
       } catch (geminiError) {
         console.warn("Gemini API error, using heuristic engine fallback:", geminiError);
       }
