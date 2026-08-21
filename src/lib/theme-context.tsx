@@ -2,61 +2,63 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-export type AppTheme = "cyber" | "daylight" | "matrix" | "midnight";
+export type AppTheme = "dark" | "light" | "cyber" | "daylight" | "midnight";
 
 interface ThemeContextType {
-  theme: AppTheme;
-  setTheme: (theme: AppTheme) => void;
+  theme: "dark" | "light";
+  isDark: boolean;
+  setTheme: (theme: "dark" | "light") => void;
   toggleTheme: () => void;
 }
 
-const STORAGE_KEY_THEME = "safebus_theme_v1";
+const STORAGE_KEY_THEME = "safebus_theme_mode_v2";
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-function applyThemeToDocument(newTheme: AppTheme) {
+function applyThemeToDocument(newTheme: "dark" | "light") {
   if (typeof document !== "undefined") {
     document.documentElement.setAttribute("data-theme", newTheme);
-    if (newTheme === "daylight") {
+    if (newTheme === "light") {
       document.documentElement.classList.add("light-mode");
+      document.documentElement.classList.remove("dark-mode");
     } else {
+      document.documentElement.classList.add("dark-mode");
       document.documentElement.classList.remove("light-mode");
     }
   }
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<AppTheme>("cyber");
+  const [theme, setThemeState] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY_THEME) as AppTheme | null;
-      if (stored && ["cyber", "daylight", "matrix", "midnight"].includes(stored)) {
-        setThemeState(stored);
-        applyThemeToDocument(stored);
+      const stored = localStorage.getItem(STORAGE_KEY_THEME) as string | null;
+      if (stored === "light" || stored === "daylight") {
+        setThemeState("light");
+        applyThemeToDocument("light");
       } else {
-        applyThemeToDocument("cyber");
+        setThemeState("dark");
+        applyThemeToDocument("dark");
       }
     } catch {
-      applyThemeToDocument("cyber");
+      applyThemeToDocument("dark");
     }
   }, []);
 
-  const setTheme = useCallback((newTheme: AppTheme) => {
+  const setTheme = useCallback((newTheme: "dark" | "light") => {
     setThemeState(newTheme);
     applyThemeToDocument(newTheme);
     try {
       localStorage.setItem(STORAGE_KEY_THEME, newTheme);
     } catch {
-      // ignore storage errors
+      // ignore
     }
   }, []);
 
   const toggleTheme = useCallback(() => {
-    const sequence: AppTheme[] = ["cyber", "daylight", "matrix", "midnight"];
     setThemeState((current) => {
-      const nextIdx = (sequence.indexOf(current) + 1) % sequence.length;
-      const next = sequence[nextIdx];
+      const next = current === "dark" ? "light" : "dark";
       applyThemeToDocument(next);
       try {
         localStorage.setItem(STORAGE_KEY_THEME, next);
@@ -68,7 +70,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        isDark: theme === "dark",
+        setTheme,
+        toggleTheme,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
