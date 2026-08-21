@@ -41,29 +41,8 @@ export async function POST(req: NextRequest) {
     let responseText = "";
     let providerUsed = "fallback";
 
-    // 1. Try OpenAI if API key configured
-    if (openaiApiKey && openaiApiKey !== "your-openai-api-key-here") {
-      try {
-        const openai = new OpenAI({ apiKey: openaiApiKey });
-        const completion = await openai.chat.completions.create({
-          model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-          messages: [
-            { role: "system", content: `${SYSTEM_PROMPT}\n\n${contextStr}` },
-            { role: "user", content: message },
-          ],
-          max_tokens: 250,
-          temperature: 0.7,
-        });
-
-        responseText = completion.choices[0]?.message?.content || "";
-        providerUsed = "openai";
-      } catch (openaiErr) {
-        console.warn("OpenAI API error, trying next provider:", openaiErr);
-      }
-    }
-
-    // 2. Try Gemini if OpenAI wasn't used or failed
-    if (!responseText && geminiApiKey && geminiApiKey !== "your-gemini-api-key-here") {
+    // 1. Try Google AI Studio Gemini first
+    if (geminiApiKey && geminiApiKey !== "your-gemini-api-key-here") {
       try {
         const ai = new GoogleGenAI({ apiKey: geminiApiKey });
         const prompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nPassenger: ${message}\nNexus AI:`;
@@ -94,7 +73,28 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (geminiError) {
-        console.warn("Gemini API error, using heuristic engine fallback:", geminiError);
+        console.warn("Gemini API error, trying next provider:", geminiError);
+      }
+    }
+
+    // 2. Try OpenAI if Gemini was not configured or failed
+    if (!responseText && openaiApiKey && openaiApiKey !== "your-openai-api-key-here") {
+      try {
+        const openai = new OpenAI({ apiKey: openaiApiKey });
+        const completion = await openai.chat.completions.create({
+          model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+          messages: [
+            { role: "system", content: `${SYSTEM_PROMPT}\n\n${contextStr}` },
+            { role: "user", content: message },
+          ],
+          max_tokens: 250,
+          temperature: 0.7,
+        });
+
+        responseText = completion.choices[0]?.message?.content || "";
+        providerUsed = "openai";
+      } catch (openaiErr) {
+        console.warn("OpenAI API error, using heuristic fallback:", openaiErr);
       }
     }
 

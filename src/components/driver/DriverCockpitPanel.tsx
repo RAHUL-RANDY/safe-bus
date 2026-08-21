@@ -62,6 +62,7 @@ export default function DriverCockpitPanel({
   const [isConfigModalOpen, setIsConfigModalOpen] = useState<boolean>(false);
   const [webcamError, setWebcamError] = useState<string>("");
   const [isNightMode, setIsNightMode] = useState<boolean>(false);
+  const [isWebcamStreaming, setIsWebcamStreaming] = useState<boolean>(false);
   const [capturedSnap, setCapturedSnap] = useState<string | null>(null);
   const [clientTimestamp, setClientTimestamp] = useState<string>("");
 
@@ -110,6 +111,7 @@ export default function DriverCockpitPanel({
         audio: false,
       });
       streamRef.current = mediaStream;
+      setIsWebcamStreaming(true);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play();
@@ -118,6 +120,7 @@ export default function DriverCockpitPanel({
       console.warn("Webcam access error:", err);
       setWebcamError("Camera access denied or device unavailable. Showing high-fidelity telemetry simulation.");
       setFeedMode("simulation");
+      setIsWebcamStreaming(false);
     }
   };
 
@@ -129,6 +132,7 @@ export default function DriverCockpitPanel({
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    setIsWebcamStreaming(false);
   };
 
   const formatShiftTime = (secs: number) => {
@@ -570,7 +574,7 @@ export default function DriverCockpitPanel({
               }`}
             >
               {/* Real Hardware Webcam Feed */}
-              {feedMode === "webcam" && streamRef.current ? (
+              {feedMode === "webcam" && isWebcamStreaming ? (
                 <video
                   ref={videoRef}
                   autoPlay
