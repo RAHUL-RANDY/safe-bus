@@ -1,402 +1,1016 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/common/Navbar";
 import InteractiveMap from "@/components/common/InteractiveMap";
 import { getSyncEngine } from "@/lib/sync-engine";
-import { getVideoRetentionEngine } from "@/lib/video-retention";
-import { Bus, Trip, TripVideoRecording } from "@/types";
+import { ROUTE_STOPS, INITIAL_BUSES } from "@/lib/route-data";
+import { Bus, Trip } from "@/types";
+import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import {
   Ticket,
   QrCode,
   ShieldCheck,
-  MapPin,
-  Clock,
-  User,
-  Phone,
-  Bus as BusIcon,
-  Video,
-  Camera,
-  Lock,
-  ArrowLeft,
+  CreditCard,
+  Smartphone,
+  Wallet,
+  Banknote,
   CheckCircle2,
+  Clock,
+  MapPin,
+  Bus as BusIcon,
+  ArrowRight,
+  ArrowLeft,
+  Download,
+  Share2,
+  Sparkles,
+  Users,
+  Check,
+  Receipt,
 } from "lucide-react";
 
-function TicketVerificationContent() {
-  const searchParams = useSearchParams();
-  const ticketIdParam = searchParams.get("id") || "trip-sample-01";
+interface BookedTicketRecord {
+  id: string;
+  pnr: string;
+  passengerName: string;
+  passengerCount: number;
+  routeName: string;
+  routeCode: string;
+  originStop: string;
+  destinationStop: string;
+  seatNumber: string;
+  amountPaid: number;
+  paymentMethod: "upi" | "card" | "smartcard" | "cash";
+  paymentRef: string;
+  bookedAt: number;
+  status: "CONFIRMED" | "USED" | "CANCELLED";
+}
 
-  const [trips, setTrips] = useState<Trip[]>([]);
+function TicketBookingAndPaymentContent() {
+  const searchParams = useSearchParams();
+  const ticketIdParam = searchParams.get("id");
+  const { user } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<"book" | "active_ticket" | "history">(
+    ticketIdParam ? "active_ticket" : "book"
+  );
+
   const [buses, setBuses] = useState<Bus[]>([]);
-  const [recordings, setRecordings] = useState<TripVideoRecording[]>([]);
-  const [activeTab, setActiveTab] = useState<"details" | "live_camera" | "saved_videos">("details");
+  const [trips, setTrips] = useState<Trip[]>([]);
+
+  // Booking Form State
+  const [selectedRouteBus, setSelectedRouteBus] = useState<string>("BUS-42A");
+  const [originStop, setOriginStop] = useState<string>(ROUTE_STOPS[0].name);
+  const [destinationStop, setDestinationStop] = useState<string>(ROUTE_STOPS[4].name);
+  const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [seatPreference, setSeatPreference] = useState<string>("Window Seat");
+  const [passengerName, setPassengerName] = useState<string>(user?.name || "Rahul Sharma");
+  const [passengerPhone, setPassengerPhone] = useState<string>("+91 98765 43210");
+
+  // Payment Options State
+  const [paymentMethod, setPaymentMethod] = useState<"upi" | "card" | "smartcard" | "cash">("upi");
+  const [upiApp, setUpiApp] = useState<string>("gpay");
+  const [upiId, setUpiId] = useState<string>("rahul@okaxis");
+  const [cardNumber, setCardNumber] = useState<string>("4532 •••• •••• 8891");
+  const [cardExpiry, setCardExpiry] = useState<string>("08/28");
+  const [cardCvv, setCardCvv] = useState<string>("742");
+  const [smartCardBalance, setSmartCardBalance] = useState<number>(450.0);
+
+  // Processing & Confirmation State
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
+  const [paymentSuccessData, setPaymentSuccessData] = useState<BookedTicketRecord | null>(null);
+
+  // History of booked tickets stored in localStorage
+  const [ticketHistory, setTicketHistory] = useState<BookedTicketRecord[]>([]);
+
+  const ticketPrintRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const engine = getSyncEngine();
-    const unsubTrips = engine.subscribeTrips((t) => setTrips(t));
     const unsubBuses = engine.subscribeBuses((b) => setBuses(b));
+    const unsubTrips = engine.subscribeTrips((t) => setTrips(t));
 
-    const videoEngine = getVideoRetentionEngine();
-    const unsubVideos = videoEngine.subscribe((v) => setRecordings(v));
+    // Load ticket history
+    try {
+      const stored = localStorage.getItem("safebus_ticket_history_v1");
+      if (stored) {
+        setTicketHistory(JSON.parse(stored));
+      } else {
+        const initialSample: BookedTicketRecord = {
+          id: "tkt-init-01",
+          pnr: "NEXUS-TKT-8821X9",
+          passengerName: "Rahul Sharma",
+          passengerCount: 1,
+          routeName: "Route 42A • Metro Tech Express",
+          routeCode: "R-42A",
+          originStop: "Electronic City Phase 1 Hub",
+          destinationStop: "Majestic City Railway Hub",
+          seatNumber: "14B",
+          amountPaid: 35.0,
+          paymentMethod: "upi",
+          paymentRef: "UPI/2026/884920194",
+          bookedAt: Date.now() - 30 * 60 * 1000,
+          status: "CONFIRMED",
+        };
+        setTicketHistory([initialSample]);
+      }
+    } catch {
+      // ignore
+    }
 
     return () => {
-      unsubTrips();
       unsubBuses();
-      unsubVideos();
+      unsubTrips();
     };
   }, []);
 
-  const trip =
-    trips.find((t) => t.tripId === ticketIdParam || t.tripId.includes(ticketIdParam)) ||
+  // Update passenger name if user logs in
+  useEffect(() => {
+    if (user?.name) {
+      setPassengerName(user.name);
+    }
+  }, [user]);
+
+  // Fare Calculation Logic
+  const originIndex = ROUTE_STOPS.findIndex((s) => s.name === originStop);
+  const destIndex = ROUTE_STOPS.findIndex((s) => s.name === destinationStop);
+  const stopDistance = Math.max(1, Math.abs((destIndex === -1 ? 4 : destIndex) - (originIndex === -1 ? 0 : originIndex)));
+  const baseFarePerPassenger = 15 + stopDistance * 5; // e.g. ₹35
+  const subtotal = baseFarePerPassenger * passengerCount;
+  const gstTax = Number((subtotal * 0.05).toFixed(2));
+  const insuranceFee = 1.5 * passengerCount;
+  const totalPayable = Number((subtotal + gstTax + insuranceFee).toFixed(2));
+
+  // Current active trip
+  const activeTrip =
     trips.find((t) => t.status === "active") ||
     trips[0] || {
-      tripId: ticketIdParam,
+      tripId: "trip-sample-01",
       passengerId: "usr-rahul-01",
       passengerName: "Rahul Sharma",
       busId: "BUS-42A",
       routeCode: "42A",
       routeName: "Route 42A • Metro Tech Express",
-      originStop: "Electronic City Phase 1",
-      destinationStop: "Majestic City Railway Hub",
+      originStop: originStop,
+      destinationStop: destinationStop,
       seatNumber: "14B",
       status: "active" as const,
-      startedAt: Date.now() - 25 * 60 * 1000,
+      startedAt: Date.now() - 15 * 60 * 1000,
       currentLocation: { lat: 12.9172, lng: 77.6228 },
-      emergencyContact: {
-        name: "Guardian",
-        phone: "+91 98765 43210",
-      },
     };
 
-  const bus = buses.find((b) => b.id === trip.busId) || buses[0] || {
-    id: "BUS-42A",
-    routeName: "Route 42A - Metro Tech Express",
-    routeCode: "R-42A",
-    plateNumber: "KA 01 F 8821",
-    driverName: "Suresh Kumar",
-    driverPhone: "+91 98450 12345",
-    currentLocation: { lat: 12.9172, lng: 77.6228 },
-    speed: 42,
-    heading: 90,
-    nextStop: "Silk Board Central Interchange",
-    nextStopIndex: 3,
-    etaMinutes: 4,
-    occupancy: 28,
-    capacity: 45,
-    status: "on-route" as const,
-    lastUpdated: Date.now(),
+  const selectedBus = buses.find((b) => b.id === selectedRouteBus) || buses[0] || INITIAL_BUSES[0];
+
+  // Handle Payment & Ticket Generation
+  const handleProcessPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessingPayment(true);
+
+    // Simulate payment gateway delay
+    await new Promise((resolve) => setTimeout(resolve, 1400));
+
+    const newPnr = `NEXUS-TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newTxnRef =
+      paymentMethod === "upi"
+        ? `UPI/${new Date().getFullYear()}/${Math.floor(100000000 + Math.random() * 900000000)}`
+        : paymentMethod === "card"
+        ? `CARD-VISA-AUTH-${Math.floor(10000 + Math.random() * 90000)}`
+        : paymentMethod === "smartcard"
+        ? `NCMC-WALLET-${Math.floor(100000 + Math.random() * 900000)}`
+        : `CASH-CONDUCTOR-RES-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newTicket: BookedTicketRecord = {
+      id: `tkt-${Date.now()}`,
+      pnr: newPnr,
+      passengerName: passengerName || "Rahul Sharma",
+      passengerCount,
+      routeName: selectedBus.routeName,
+      routeCode: selectedBus.routeCode,
+      originStop,
+      destinationStop,
+      seatNumber: `${Math.floor(1 + Math.random() * 18)}${["A", "B", "C", "D"][Math.floor(Math.random() * 4)]}`,
+      amountPaid: totalPayable,
+      paymentMethod,
+      paymentRef: newTxnRef,
+      bookedAt: Date.now(),
+      status: "CONFIRMED",
+    };
+
+    // Deduct SmartCard balance if used
+    if (paymentMethod === "smartcard") {
+      setSmartCardBalance((prev) => Math.max(0, Number((prev - totalPayable).toFixed(2))));
+    }
+
+    // Sync trip with SafeBus Live Engine
+    await getSyncEngine().createTrip({
+      tripId: `trip-${Date.now()}`,
+      passengerId: user?.id || `pass-${Date.now()}`,
+      passengerName: newTicket.passengerName,
+      busId: selectedBus.id,
+      routeCode: selectedBus.routeCode,
+      routeName: selectedBus.routeName,
+      originStop: newTicket.originStop,
+      destinationStop: newTicket.destinationStop,
+      seatNumber: newTicket.seatNumber,
+      status: "active",
+      startedAt: Date.now(),
+      currentLocation: selectedBus.currentLocation,
+      emergencyContact: {
+        name: "Emergency Dispatch",
+        phone: "+91 98765 43210",
+      },
+    });
+
+    const updatedHistory = [newTicket, ...ticketHistory];
+    setTicketHistory(updatedHistory);
+    try {
+      localStorage.setItem("safebus_ticket_history_v1", JSON.stringify(updatedHistory));
+    } catch {
+      // ignore
+    }
+
+    setPaymentSuccessData(newTicket);
+    setIsProcessingPayment(false);
+    setActiveTab("active_ticket");
   };
 
-  const tripRecordings = recordings.filter(
-    (r) => r.busId === bus.id || r.tripId === trip.tripId
-  );
+  const handlePrintTicket = () => {
+    window.print();
+  };
 
-  const displayPnr = `NEXUS-TKT-${trip.tripId.replace("trip-", "").slice(-6).toUpperCase() || "8821X9"}`;
+  const handleShareTicket = (pnr: string) => {
+    const url = `${window.location.origin}/ticket?id=${pnr}`;
+    if (navigator.share) {
+      navigator.share({
+        title: `SafeBus Digital E-Ticket: ${pnr}`,
+        text: `Official SafeBus E-Ticket for ${passengerName} (${originStop} ➔ ${destinationStop}). Scan QR to board:`,
+        url,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+      alert("📋 Ticket link copied to clipboard!");
+    }
+  };
+
+  const displayTicket = paymentSuccessData || ticketHistory[0] || null;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans">
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
-        {/* Top Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 shadow">
+        {/* Top Header Banner */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow">
           <div className="flex items-center gap-3">
-            <Link
-              href="/passenger"
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
-              title="Back to Passenger App"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">
+              <Ticket className="w-5 h-5" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-bold text-white">
-                  SafeBus Digital Smart Ticket
+                  SafeBus Ticket Booking & Fare Payment
                 </h1>
-                <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-800 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  VERIFIED VALID
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-800 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  INSTANT SECURE GATEWAY
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Official Public Transit Electronic Travel Document
+                Book digital smart tickets, calculate distance fares, and pay via UPI, Card, or Transit Pass
               </p>
             </div>
           </div>
 
-          <div className="text-right font-mono">
-            <div className="text-[10px] uppercase text-slate-400">PNR Reference</div>
-            <div className="text-xs sm:text-sm font-bold text-blue-400">{displayPnr}</div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/passenger"
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Passenger Hub</span>
+            </Link>
           </div>
         </div>
 
-        {/* 3 Portal Tabs */}
-        <div className="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+        {/* 3 Main Portal Tabs */}
+        <div className="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 shadow-sm">
           <button
-            onClick={() => setActiveTab("details")}
-            className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
-              activeTab === "details"
-                ? "bg-blue-600 text-white shadow"
+            onClick={() => setActiveTab("book")}
+            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+              activeTab === "book"
+                ? "bg-blue-600 text-white shadow-md font-extrabold"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <Ticket className="w-4 h-4" />
-            <span className="hidden sm:inline">1. Ticket & Route</span>
-            <span className="sm:hidden">Ticket</span>
+            <CreditCard className="w-4 h-4" />
+            <span className="hidden sm:inline">1. Book Ticket & Pay</span>
+            <span className="sm:hidden">Book & Pay</span>
           </button>
 
           <button
-            onClick={() => setActiveTab("live_camera")}
-            className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
-              activeTab === "live_camera"
-                ? "bg-blue-600 text-white shadow"
+            onClick={() => setActiveTab("active_ticket")}
+            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+              activeTab === "active_ticket"
+                ? "bg-blue-600 text-white shadow-md font-extrabold"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <Camera className="w-4 h-4" />
-            <span className="hidden sm:inline">2. Live Bus Tracking</span>
-            <span className="sm:hidden">Live Cam</span>
+            <QrCode className="w-4 h-4" />
+            <span className="hidden sm:inline">2. Active Digital Ticket</span>
+            <span className="sm:hidden">Active Ticket</span>
           </button>
 
           <button
-            onClick={() => setActiveTab("saved_videos")}
-            className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
-              activeTab === "saved_videos"
-                ? "bg-blue-600 text-white shadow"
+            onClick={() => setActiveTab("history")}
+            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+              activeTab === "history"
+                ? "bg-blue-600 text-white shadow-md font-extrabold"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
             }`}
           >
-            <Video className="w-4 h-4" />
-            <span className="hidden sm:inline">3. 24h Video Vault</span>
-            <span className="sm:hidden">Vault</span>
+            <Receipt className="w-4 h-4" />
+            <span className="hidden sm:inline">3. Ticket History & Receipts</span>
+            <span className="sm:hidden">History</span>
           </button>
         </div>
 
-        {/* TAB 1: TICKET DETAILS */}
-        {activeTab === "details" && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            {/* Main Ticket Card (7 Cols) */}
-            <div className="md:col-span-7 p-6 rounded-2xl border border-slate-800 bg-slate-900 shadow space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div>
-                  <div className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
-                    Electronic Transit Ticket
+        {/* ══════════════════════════════════════════════════
+            TAB 1: TICKET BOOKING & PAYMENT OPTIONS
+        ══════════════════════════════════════════════════ */}
+        {activeTab === "book" && (
+          <form onSubmit={handleProcessPayment} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: Route, Stops & Passengers (7 cols) */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Route & Corridor Selector */}
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <BusIcon className="w-4 h-4 text-blue-400" />
+                    <h2 className="text-sm font-bold text-white">Select Bus Corridor & Route</h2>
                   </div>
-                  <h2 className="text-lg font-bold text-white">{trip.routeName}</h2>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400 font-mono">Seat Number</div>
-                  <div className="text-xl font-black font-mono text-amber-400">{trip.seatNumber}</div>
-                </div>
-              </div>
-
-              {/* Origin -> Destination */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] text-slate-400">Boarding Point</div>
-                  <div className="text-sm font-bold text-white">{trip.originStop}</div>
-                </div>
-                <div className="text-center font-mono text-xs text-blue-400 px-2">
-                  <span>───►</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400">Destination</div>
-                  <div className="text-sm font-bold text-white">{trip.destinationStop}</div>
-                </div>
-              </div>
-
-              {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-4 text-xs pt-1 border-b border-slate-800 pb-4">
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Passenger Name</div>
-                  <div className="text-white font-bold flex items-center gap-1.5 mt-1">
-                    <User className="w-3.5 h-3.5 text-blue-400" />
-                    <span>{trip.passengerName}</span>
-                  </div>
+                  <span className="text-[10px] text-blue-400 font-mono font-bold bg-blue-950 px-2 py-0.5 rounded border border-blue-800">
+                    Live Real-Time Fleet
+                  </span>
                 </div>
 
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Vehicle Unit</div>
-                  <div className="text-white font-bold font-mono flex items-center gap-1.5 mt-1">
-                    <BusIcon className="w-3.5 h-3.5 text-blue-400" />
-                    <span>{bus.id} ({bus.plateNumber})</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Emergency Contact</div>
-                  <div className="text-slate-200 font-mono flex items-center gap-1.5 mt-1">
-                    <Phone className="w-3.5 h-3.5 text-blue-400" />
-                    <span>{trip.emergencyContact?.phone || "+91 98765 43210"}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Fare Paid</div>
-                  <div className="text-emerald-400 font-bold font-mono text-sm mt-0.5">
-                    ₹45.00 (Transit Pass)
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {INITIAL_BUSES.map((b) => {
+                    const isSelected = selectedRouteBus === b.id;
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setSelectedRouteBus(b.id)}
+                        className={`p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 ${
+                          isSelected
+                            ? "bg-blue-950/80 border-blue-500 text-white shadow-md"
+                            : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-xs text-blue-400">{b.id}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-blue-400" />}
+                        </div>
+                        <div className="text-xs font-bold truncate">{b.routeName.split(" - ")[0]}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">{b.plateNumber}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  onClick={() => setActiveTab("live_camera")}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>View Live Bus Camera</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("saved_videos")}
-                  className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition"
-                >
-                  <Video className="w-4 h-4" />
-                  <span>24h Video Vault</span>
-                </button>
-              </div>
-            </div>
-
-            {/* QR Code Verification Card (5 Cols) */}
-            <div className="md:col-span-5 p-6 rounded-2xl border border-slate-800 bg-slate-900 shadow flex flex-col items-center justify-center text-center space-y-4">
-              <div className="p-4 bg-white rounded-2xl shadow">
-                <QrCode className="w-36 h-36 text-slate-950" />
-              </div>
-              <div>
-                <div className="text-sm font-bold text-white">Digital Travel QR Code</div>
-                <p className="text-xs text-slate-400 mt-1 max-w-xs">
-                  Scan at vehicle validator or show to ticket inspector for instant verification.
-                </p>
-              </div>
-
-              <div className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono flex items-center justify-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                <span>AES-256 DIGITAL SIGNATURE VALID</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: LIVE CAMERA */}
-        {activeTab === "live_camera" && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            <div className="md:col-span-7 p-5 rounded-2xl border border-slate-800 bg-slate-900 shadow space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-blue-400" />
-                  <h3 className="text-sm font-bold text-white">Live On-Bus Camera</h3>
+              {/* Boarding & Destination Stops */}
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                  <MapPin className="w-4 h-4 text-emerald-400" />
+                  <h2 className="text-sm font-bold text-white">Boarding & Destination Stops</h2>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-800 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  STREAMING LIVE
-                </span>
-              </div>
 
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center">
-                <div className="w-full h-full bg-slate-950 flex items-center justify-center p-6 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Origin */}
                   <div>
-                    <Camera className="w-10 h-10 text-blue-400 mx-auto mb-2" />
-                    <div className="text-sm font-bold text-white">Bus {bus.id} • Cabin Stream</div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      Passenger: {trip.passengerName} (Seat {trip.seatNumber})
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                      From (Boarding Stop)
+                    </label>
+                    <select
+                      value={originStop}
+                      onChange={(e) => setOriginStop(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                    >
+                      {ROUTE_STOPS.map((stop) => (
+                        <option key={stop.id} value={stop.name}>
+                          📍 {stop.name} ({stop.estimatedTime})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Destination */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                      To (Destination Stop)
+                    </label>
+                    <select
+                      value={destinationStop}
+                      onChange={(e) => setDestinationStop(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                    >
+                      {ROUTE_STOPS.map((stop) => (
+                        <option key={stop.id} value={stop.name}>
+                          🏁 {stop.name} ({stop.estimatedTime})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Stop Distance Indicator */}
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Travel Route: <b>{stopDistance} transit zones</b></span>
+                  </div>
+                  <span className="font-mono text-emerald-400 font-bold">
+                    Est. Duration: {stopDistance * 7} mins
+                  </span>
+                </div>
+              </div>
+
+              {/* Passenger Details & Seats */}
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                  <Users className="w-4 h-4 text-purple-400" />
+                  <h2 className="text-sm font-bold text-white">Passenger Details & Seats</h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                      Passenger Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={passengerName}
+                      onChange={(e) => setPassengerName(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                      Mobile Number (SMS E-Ticket)
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={passengerPhone}
+                      onChange={(e) => setPassengerPhone(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Passenger Stepper & Seat Preference */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                      Number of Passengers
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
+                        className="w-9 h-9 rounded-xl bg-slate-950 border border-slate-800 hover:bg-slate-800 text-white font-bold flex items-center justify-center transition"
+                      >
+                        -
+                      </button>
+                      <div className="flex-1 py-1.5 text-center font-bold font-mono text-sm bg-slate-950 border border-slate-800 rounded-xl text-white">
+                        {passengerCount} {passengerCount === 1 ? "Ticket" : "Tickets"}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPassengerCount(Math.min(6, passengerCount + 1))}
+                        className="w-9 h-9 rounded-xl bg-slate-950 border border-slate-800 hover:bg-slate-800 text-white font-bold flex items-center justify-center transition"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
-                </div>
 
-                <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-xs font-mono text-blue-300 bg-black/80 px-2 py-1 rounded">
-                    <span>GPS: {bus.currentLocation.lat.toFixed(4)}° N, {bus.currentLocation.lng.toFixed(4)}° E</span>
-                    <span>SPEED: {bus.speed} KM/H</span>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                      Seat Preference
+                    </label>
+                    <select
+                      value={seatPreference}
+                      onChange={(e) => setSeatPreference(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="Window Seat">🪟 Standard Window Seat</option>
+                      <option value="Aisle Seat">🚶 Aisle Easy-Access Seat</option>
+                      <option value="Priority Low-Floor">♿ Priority / Senior Citizen Seat</option>
+                      <option value="Front Row">✨ Front Panoramic View</option>
+                    </select>
                   </div>
-                  <div className="text-xs font-mono text-slate-300 bg-black/80 px-2 py-1 rounded self-start">
-                    SAFEBUS TICKET VERIFIED • {displayPnr}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Payment Options & Fare Breakdown (5 cols) */}
+            <div className="lg:col-span-5 space-y-6">
+              {/* Payment Methods Selection */}
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-emerald-400" />
+                    <h2 className="text-sm font-bold text-white">Choose Payment Method</h2>
                   </div>
+                  <span className="text-[10px] text-slate-400 font-mono">100% Encrypted</span>
                 </div>
-              </div>
-            </div>
 
-            <div className="md:col-span-5 flex flex-col gap-4 h-[380px]">
-              <div className="flex-1 rounded-2xl overflow-hidden border border-slate-800 shadow">
-                <InteractiveMap
-                  buses={[bus]}
-                  activeBusId={bus.id}
-                  focusLocation={bus.currentLocation}
-                  height="100%"
-                />
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-bold">Next Transit Stop</div>
-                  <div className="text-white font-bold">{bus.nextStop}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400 uppercase font-bold">ETA</div>
-                  <div className="text-blue-400 font-bold font-mono">~{bus.etaMinutes} mins</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: SAVED VIDEOS */}
-        {activeTab === "saved_videos" && (
-          <div className="p-6 rounded-2xl border border-slate-800 bg-slate-900 shadow space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5">
-                <Video className="w-5 h-5 text-blue-400" />
-                <div>
-                  <h3 className="text-sm font-bold text-white">24-Hour Video Vault</h3>
-                  <p className="text-xs text-slate-400">
-                    Recorded footage linked to this ride • Automatically purged 24 hours after journey
-                  </p>
-                </div>
-              </div>
-              <span className="px-2.5 py-1 rounded bg-blue-950 text-blue-300 font-mono text-[10px] font-bold border border-blue-800">
-                🔒 24H PURGE ACTIVE
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {tripRecordings.length === 0 ? (
-                <div className="p-8 text-center bg-slate-950 rounded-xl border border-slate-800">
-                  <Video className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                  <div className="text-xs font-bold text-slate-300">No Video Clips Recorded Yet</div>
-                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                    When you record safety clips via the passenger camera or on-board CCTV, they appear here with AES-256 encryption.
-                  </p>
-                </div>
-              ) : (
-                tripRecordings.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3"
+                {/* 4 Payment Option Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* UPI */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("upi")}
+                    className={`p-3 rounded-xl border text-left transition flex items-center gap-2.5 ${
+                      paymentMethod === "upi"
+                        ? "bg-blue-950 border-blue-500 text-white shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800">
-                        <Video className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold">
+                      <Smartphone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">UPI / QR Pay</div>
+                      <div className="text-[10px] text-slate-400">GPay, PhonePe</div>
+                    </div>
+                  </button>
+
+                  {/* Card */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={`p-3 rounded-xl border text-left transition flex items-center gap-2.5 ${
+                      paymentMethod === "card"
+                        ? "bg-blue-950 border-blue-500 text-white shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold">
+                      <CreditCard className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">Credit/Debit</div>
+                      <div className="text-[10px] text-slate-400">Visa, Mastercard</div>
+                    </div>
+                  </button>
+
+                  {/* Transit SmartCard */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("smartcard")}
+                    className={`p-3 rounded-xl border text-left transition flex items-center gap-2.5 ${
+                      paymentMethod === "smartcard"
+                        ? "bg-blue-950 border-blue-500 text-white shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold">
+                      <Wallet className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">NCMC Pass</div>
+                      <div className="text-[10px] text-slate-400">₹{smartCardBalance.toFixed(2)}</div>
+                    </div>
+                  </button>
+
+                  {/* Cash */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cash")}
+                    className={`p-3 rounded-xl border text-left transition flex items-center gap-2.5 ${
+                      paymentMethod === "cash"
+                        ? "bg-blue-950 border-blue-500 text-white shadow-sm"
+                        : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber-600/20 text-amber-400 flex items-center justify-center font-bold">
+                      <Banknote className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">Cash on Bus</div>
+                      <div className="text-[10px] text-slate-400">Conductor Pay</div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Method-Specific Input Fields */}
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                  {paymentMethod === "upi" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-slate-300">Quick UPI Apps:</span>
+                        <div className="flex gap-1.5">
+                          {["gpay", "phonepe", "paytm"].map((app) => (
+                            <button
+                              key={app}
+                              type="button"
+                              onClick={() => setUpiApp(app)}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition ${
+                                upiApp === app
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-slate-800 text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              {app}
+                            </button>
+                          ))}
+                        </div>
                       </div>
+
                       <div>
-                        <div className="text-xs font-bold text-white">{rec.recordedBy}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">
-                          Duration: {rec.durationSeconds}s • Encryption: {rec.encryptionHash}
+                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                          Enter UPI Virtual Payment Address (VPA)
+                        </label>
+                        <input
+                          type="text"
+                          value={upiId}
+                          onChange={(e) => setUpiId(e.target.value)}
+                          placeholder="username@okhdfcbank"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === "card" && (
+                    <div className="space-y-2.5">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                          Card Number
+                        </label>
+                        <input
+                          type="text"
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                            Expiry (MM/YY)
+                          </label>
+                          <input
+                            type="text"
+                            value={cardExpiry}
+                            onChange={(e) => setCardExpiry(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                            CVV
+                          </label>
+                          <input
+                            type="password"
+                            maxLength={4}
+                            value={cardCvv}
+                            onChange={(e) => setCardCvv(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                          />
                         </div>
                       </div>
                     </div>
+                  )}
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">
-                        {rec.isIncidentPreserved ? "🛡️ PRESERVED FOR SOS" : "EXPIRES IN 24H"}
-                      </span>
+                  {paymentMethod === "smartcard" && (
+                    <div className="text-xs space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400">Card Number:</span>
+                        <span className="font-mono text-white font-bold">NCMC-8821-9920</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400">Current Balance:</span>
+                        <span className="font-mono text-emerald-400 font-bold">₹{smartCardBalance.toFixed(2)}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        Fare will be automatically deducted from your SafeBus Transit Pass.
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === "cash" && (
+                    <div className="text-xs text-slate-300 space-y-1">
+                      <p className="font-bold text-amber-400">💵 Pay on Boarding</p>
+                      <p className="text-[11px] text-slate-400">
+                        A reserved provisional boarding token will be issued. Present the QR to the bus conductor to pay in cash.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Fare Summary & Checkout Button */}
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+                  Transit Fare Summary
+                </h3>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span>Base Fare ({passengerCount} x ₹{baseFarePerPassenger})</span>
+                    <span className="font-mono font-bold">₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>Public Transit Cess (5% GST)</span>
+                    <span className="font-mono">₹{gstTax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>Passenger Safety Insurance</span>
+                    <span className="font-mono">₹{insuranceFee.toFixed(2)}</span>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-sm font-bold text-white">
+                    <span>Total Amount Payable</span>
+                    <span className="text-lg font-mono text-emerald-400 font-black">
+                      ₹{totalPayable.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isProcessingPayment}
+                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Processing Payment & Issuing Ticket...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Pay ₹{totalPayable.toFixed(2)} & Generate Smart Ticket</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* ══════════════════════════════════════════════════
+            TAB 2: ACTIVE DIGITAL SMART TICKET
+        ══════════════════════════════════════════════════ */}
+        {activeTab === "active_ticket" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Main Ticket Card (7 Cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              <div
+                ref={ticketPrintRef}
+                className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-5 relative overflow-hidden"
+              >
+                {/* Top Authority Header */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow">
+                      <Ticket className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
+                        Official Transit E-Ticket
+                      </div>
+                      <h2 className="text-base font-bold text-white">
+                        {displayTicket?.routeName || activeTrip.routeName}
+                      </h2>
                     </div>
                   </div>
-                ))
-              )}
+
+                  <span className="px-2.5 py-1 rounded bg-emerald-950 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-800 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {displayTicket?.status || "CONFIRMED"}
+                  </span>
+                </div>
+
+                {/* Origin -> Destination Route Box */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="text-[10px] text-slate-400 font-semibold uppercase">Boarding Point</div>
+                    <div className="text-xs sm:text-sm font-bold text-white truncate">
+                      {displayTicket?.originStop || activeTrip.originStop}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center px-2">
+                    <span className="text-[10px] text-blue-400 font-mono font-bold">ONE WAY</span>
+                    <ArrowRight className="w-4 h-4 text-blue-400" />
+                  </div>
+
+                  <div className="flex-1 text-right">
+                    <div className="text-[10px] text-slate-400 font-semibold uppercase">Destination</div>
+                    <div className="text-xs sm:text-sm font-bold text-white truncate">
+                      {displayTicket?.destinationStop || activeTrip.destinationStop}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metadata Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <div className="text-[10px] text-slate-400">Passenger</div>
+                    <div className="font-bold text-white truncate">
+                      {displayTicket?.passengerName || activeTrip.passengerName}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <div className="text-[10px] text-slate-400">Assigned Seat</div>
+                    <div className="font-bold font-mono text-amber-400">
+                      {displayTicket?.seatNumber || activeTrip.seatNumber || "14B"}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <div className="text-[10px] text-slate-400">Fare Paid</div>
+                    <div className="font-bold font-mono text-emerald-400">
+                      ₹{(displayTicket?.amountPaid || 35.0).toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <div className="text-[10px] text-slate-400">Payment Mode</div>
+                    <div className="font-bold uppercase text-slate-200">
+                      {displayTicket?.paymentMethod || "UPI"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* QR Code Scannable Area */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                  <div className="w-28 h-28 bg-white p-2 rounded-xl border border-slate-300 flex items-center justify-center shadow-inner flex-shrink-0">
+                    <QrCode className="w-24 h-24 text-slate-950" />
+                  </div>
+
+                  <div className="space-y-1.5 flex-1">
+                    <div className="text-[10px] uppercase font-bold text-slate-400">Scannable Boarding PNR</div>
+                    <div className="text-sm font-mono font-black text-blue-400">
+                      {displayTicket?.pnr || "NEXUS-TKT-8821X9"}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Scan this QR code at the bus entry validator gate or present it to the conductor upon boarding.
+                    </p>
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      Ref: {displayTicket?.paymentRef || "UPI/2026/884920194"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">
+                  <button
+                    onClick={handlePrintTicket}
+                    className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition flex items-center justify-center gap-1.5"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Print / Save PDF</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleShareTicket(displayTicket?.pnr || "8821X9")}
+                    className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition flex items-center justify-center gap-1.5"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Share E-Ticket</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("book")}
+                    className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition flex items-center justify-center gap-1.5"
+                  >
+                    <span>+ Book Another</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Live Bus Tracking & Camera (5 Cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <BusIcon className="w-4 h-4 text-blue-400" />
+                    <h3 className="text-xs font-bold text-white">Live Assigned Bus Status</h3>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    ON CORRIDOR
+                  </span>
+                </div>
+
+                <div className="h-[220px] rounded-xl overflow-hidden border border-slate-800">
+                  <InteractiveMap
+                    buses={[selectedBus]}
+                    activeBusId={selectedBus.id}
+                    focusLocation={selectedBus.currentLocation}
+                    height="100%"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <span className="text-[10px] text-slate-500 block">Assigned Unit</span>
+                    <b className="text-white">{selectedBus.id} ({selectedBus.plateNumber})</b>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <span className="text-[10px] text-slate-500 block">Next Arrival</span>
+                    <b className="text-emerald-400">{selectedBus.nextStop} (in {selectedBus.etaMinutes}m)</b>
+                  </div>
+                </div>
+
+                <Link
+                  href="/passenger"
+                  className="w-full py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 text-xs font-bold transition flex items-center justify-center gap-1.5"
+                >
+                  <span>Open Full Passenger Safety Hub →</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════
+            TAB 3: TICKET HISTORY & RECEIPTS
+        ══════════════════════════════════════════════════ */}
+        {activeTab === "history" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div>
+                <h2 className="text-sm font-bold text-white">Your Booked Tickets & Invoices</h2>
+                <p className="text-xs text-slate-400">
+                  Complete ledger of electronic tickets purchased via SafeBus Nexus Gateway
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveTab("book")}
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition flex items-center gap-1.5"
+              >
+                <span>+ Book New Ticket</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {ticketHistory.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-blue-950 text-blue-400 font-mono text-[10px] font-bold border border-blue-800">
+                        {item.pnr}
+                      </span>
+                      <span className="text-xs font-bold text-white">{item.routeName}</span>
+                    </div>
+
+                    <div className="text-xs text-slate-300 flex items-center gap-2">
+                      <span>📍 {item.originStop}</span>
+                      <ArrowRight className="w-3 h-3 text-slate-500" />
+                      <span>🏁 {item.destinationStop}</span>
+                    </div>
+
+                    <div className="text-[10px] text-slate-400 font-mono flex items-center gap-3">
+                      <span>Seat: {item.seatNumber}</span>
+                      <span>•</span>
+                      <span>Paid via: {item.paymentMethod.toUpperCase()}</span>
+                      <span>•</span>
+                      <span>{new Date(item.bookedAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2">
+                    <div className="text-base font-bold font-mono text-emerald-400">
+                      ₹{item.amountPaid.toFixed(2)}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPaymentSuccessData(item);
+                        setActiveTab("active_ticket");
+                      }}
+                      className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition"
+                    >
+                      View Digital Ticket →
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -405,10 +1019,19 @@ function TicketVerificationContent() {
   );
 }
 
-export default function TicketVerificationPage() {
+export default function TicketPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">Loading ticket verification...</div>}>
-      <TicketVerificationContent />
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+          <div className="text-center space-y-2">
+            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-slate-400">Loading SafeBus Ticket System...</p>
+          </div>
+        </div>
+      }
+    >
+      <TicketBookingAndPaymentContent />
     </Suspense>
   );
 }

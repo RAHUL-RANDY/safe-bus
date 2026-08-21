@@ -157,6 +157,15 @@ export default function PassengerCheckIn({ onStartTrip }: PassengerCheckInProps)
           <span>Start Journey</span>
           <ArrowRight className="w-4 h-4" />
         </button>
+
+        <div className="pt-2 border-t border-slate-800 text-center">
+          <a
+            href="/ticket"
+            className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center justify-center gap-1.5 transition"
+          >
+            <span>🎟️ Need a ticket? Book & Pay Online via UPI / Card →</span>
+          </a>
+        </div>
       </form>
     </div>
   );

@@ -9,7 +9,8 @@ import EmergencyModal from "@/components/passenger/EmergencyModal";
 import AIAssistantDrawer from "@/components/passenger/AIAssistantDrawer";
 import { getSyncEngine } from "@/lib/sync-engine";
 import { Bus, Trip, Alert } from "@/types";
-import { Shield, Sparkles } from "lucide-react";
+import { Shield, Sparkles, Ticket } from "lucide-react";
+import Link from "next/link";
 
 export default function PassengerPage() {
   const [buses, setBuses] = useState<Bus[]>([]);
@@ -167,6 +168,27 @@ export default function PassengerPage() {
                   <b>Protected Ride:</b> Vehicle telematics connected to 24/7 Fleet Command.
                 </span>
               </div>
+
+              {/* Book Ticket / Pay Fare Fast Action */}
+              <Link
+                href="/ticket"
+                className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 flex items-center justify-between shadow transition group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-950 text-emerald-400 flex items-center justify-center border border-emerald-800">
+                    <Ticket className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Book New Ticket / Pay Fare</h4>
+                    <p className="text-xs text-slate-400">
+                      Pay via UPI, Cards, or Metro SmartCard for instant QR pass
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-blue-400 group-hover:translate-x-1 transition-transform">
+                  Book →
+                </span>
+              </Link>
             </div>
           )}
         </div>
