@@ -29,6 +29,26 @@
     --card-border-hi:  rgba(37, 99, 235, 0.40);
     --card-shadow:     0 4px 20px rgba(0, 0, 0, 0.35);
 
+    /* Button Tokens (Dark Mode Defaults) */
+    --btn-primary-bg:      #2563eb;
+    --btn-primary-hover:   #1d4ed8;
+    --btn-primary-text:    #ffffff;
+    --btn-primary-shadow:  0 4px 14px rgba(37, 99, 235, 0.35);
+
+    --btn-secondary-bg:     #1e293b;
+    --btn-secondary-hover:  #334155;
+    --btn-secondary-border: rgba(255, 255, 255, 0.12);
+    --btn-secondary-text:   #f8fafc;
+
+    --btn-danger-bg:       #dc2626;
+    --btn-danger-hover:    #b91c1c;
+    --btn-danger-text:     #ffffff;
+    --btn-danger-shadow:   0 4px 16px rgba(220, 38, 38, 0.4);
+
+    --btn-success-bg:      #059669;
+    --btn-success-hover:   #047857;
+    --btn-success-text:    #ffffff;
+
     /* Backwards compatibility aliases */
     --glass-bg:        rgba(15, 23, 42, 0.85);
     --glass-bg-hover:  rgba(30, 41, 59, 0.95);
@@ -99,18 +119,31 @@
 }
 
 /* ═══════════════════════════════════════════════
-   CLEAN FORMAL BUTTONS & BADGES
+   THEME-AWARE BUTTONS & BADGES
 ═══════════════════════════════════════════════ */
 
 .btn-primary {
-  background-color: var(--transit-blue);
-  color: #ffffff !important;
+  background-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
   font-weight: 600;
   border-radius: 0.75rem;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  box-shadow: var(--btn-primary-shadow);
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 .btn-primary:hover {
-  background-color: var(--transit-blue-h);
+  background-color: var(--btn-primary-hover) !important;
+}
+
+.btn-secondary {
+  background-color: var(--btn-secondary-bg) !important;
+  color: var(--btn-secondary-text) !important;
+  border: 1px solid var(--btn-secondary-border);
+  font-weight: 600;
+  border-radius: 0.75rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn-secondary:hover {
+  background-color: var(--btn-secondary-hover) !important;
 }
 
 .badge-live {
@@ -200,6 +233,27 @@ html.light-mode body,
   --glass-bg-hover:  #f8fafc;
   --glass-border:    #e2e8f0;
   --glass-border-hi: rgba(37, 99, 235, 0.5);
+
+  /* Light Mode Button Overrides */
+  --btn-primary-bg:      #2563eb;
+  --btn-primary-hover:   #1d4ed8;
+  --btn-primary-text:    #ffffff;
+  --btn-primary-shadow:  0 2px 10px rgba(37, 99, 235, 0.25);
+
+  --btn-secondary-bg:     #f1f5f9;
+  --btn-secondary-hover:  #e2e8f0;
+  --btn-secondary-border: #cbd5e1;
+  --btn-secondary-text:   #0f172a;
+
+  --btn-danger-bg:       #dc2626;
+  --btn-danger-hover:    #b91c1c;
+  --btn-danger-text:     #ffffff;
+  --btn-danger-shadow:   0 3px 12px rgba(220, 38, 38, 0.25);
+
+  --btn-success-bg:      #059669;
+  --btn-success-hover:   #047857;
+  --btn-success-text:    #ffffff;
+
   background-color:  #f8fafc !important;
   background-image:  linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
   color:             #334155 !important;
@@ -239,10 +293,18 @@ html.light-mode .bg-slate-950\/90,
   background-color: rgba(241, 245, 249, 0.95) !important;
 }
 
+/* Light Mode Secondary Action Buttons (High Contrast) */
 html.light-mode .bg-slate-800,
 [data-theme="light"] .bg-slate-800 {
   background-color: #f1f5f9 !important;
-  color: #1e293b !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light-mode .bg-slate-800:hover,
+[data-theme="light"] .bg-slate-800:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 html.light-mode .border-slate-800,
@@ -286,6 +348,24 @@ html.light-mode .bg-emerald-600,
   color: #ffffff !important;
 }
 
+html.light-mode .bg-blue-600:hover,
+[data-theme="light"] .bg-blue-600:hover {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+html.light-mode .bg-red-600:hover,
+[data-theme="light"] .bg-red-600:hover {
+  background-color: #b91c1c !important;
+  color: #ffffff !important;
+}
+
+html.light-mode .bg-emerald-600:hover,
+[data-theme="light"] .bg-emerald-600:hover {
+  background-color: #047857 !important;
+  color: #ffffff !important;
+}
+
 html.light-mode .bg-blue-600 *,
 html.light-mode .bg-red-600 *,
 html.light-mode .bg-emerald-600 *,
@@ -293,6 +373,39 @@ html.light-mode .bg-emerald-600 *,
 [data-theme="light"] .bg-red-600 *,
 [data-theme="light"] .bg-emerald-600 * {
   color: #ffffff !important;
+}
+
+/* Light Mode Chip Buttons */
+html.light-mode .bg-cyan-950,
+html.light-mode .bg-cyan-950\/80,
+html.light-mode .bg-blue-950,
+[data-theme="light"] .bg-cyan-950,
+[data-theme="light"] .bg-cyan-950\/80,
+[data-theme="light"] .bg-blue-950 {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light-mode .bg-emerald-950,
+[data-theme="light"] .bg-emerald-950 {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light-mode .bg-amber-950,
+[data-theme="light"] .bg-amber-950 {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+html.light-mode .bg-red-950,
+[data-theme="light"] .bg-red-950 {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+  border-color: #fecaca !important;
 }
 
 html.light-mode input,
