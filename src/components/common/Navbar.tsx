@@ -21,11 +21,10 @@ import { useAuth } from "@/lib/auth-context";
 import ThemeToggle from "@/components/common/ThemeToggle";
 
 const NAV_LINKS = [
-  { href: "/", label: "Overview", shortLabel: "Home", icon: Columns },
   { href: "/passenger", label: "Passenger Hub", shortLabel: "Passenger", icon: Smartphone },
-  { href: "/operator", label: "Fleet Command", shortLabel: "Command", icon: LayoutDashboard },
-  { href: "/driver", label: "Driver Cockpit", shortLabel: "Driver", icon: Bus },
   { href: "/ticket", label: "Digital Ticket", shortLabel: "Ticket", icon: Ticket },
+  { href: "/driver", label: "Driver Cockpit", shortLabel: "Driver", icon: Bus },
+  { href: "/operator", label: "Fleet Command", shortLabel: "Command", icon: LayoutDashboard },
   { href: "/login", label: "Portal", shortLabel: "Login", icon: LogIn },
 ];
 
@@ -43,7 +42,7 @@ export default function Navbar() {
     <header className="w-full sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between gap-4">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
+        <Link href="/passenger" className="flex items-center gap-3 group flex-shrink-0">
           <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
             <Shield className="w-5 h-5" />
           </div>
