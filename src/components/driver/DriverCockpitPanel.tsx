@@ -736,7 +736,7 @@ export default function DriverCockpitPanel({
                     SPEED: {speed} KM/H
                   </span>
                   <span className="bg-black/80 px-2 py-0.5 rounded text-slate-300 border border-slate-800">
-                    🔒 24H RETENTION
+                    🔒 12H RETENTION
                   </span>
                 </div>
               </div>
@@ -789,7 +789,7 @@ export default function DriverCockpitPanel({
               className="w-full py-2 px-3 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/80 text-purple-300 hover:text-purple-200 text-xs font-bold transition flex items-center justify-center gap-2 shadow"
             >
               <Film className="w-4 h-4 text-purple-400" />
-              <span>View Saved Videos (24H DVR Archive) →</span>
+              <span>View Saved Trip Videos ({bus.id} • 12H Archive) →</span>
             </button>
           </div>
 
@@ -862,6 +862,7 @@ export default function DriverCockpitPanel({
       <VideoRetentionModal
         isOpen={isVideoRetentionOpen}
         onClose={() => setIsVideoRetentionOpen(false)}
+        targetBusId={bus.id}
       />
     </div>
   );

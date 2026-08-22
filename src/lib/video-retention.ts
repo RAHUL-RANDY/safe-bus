@@ -1,35 +1,71 @@
 "use client";
 
-import { TripVideoRecording } from "@/types";
+import { TripVideoRecording, Trip } from "@/types";
 import { supabase, isSupabaseConfigured } from "./supabase";
 
 const STORAGE_KEY_VIDEOS = "safebus_trip_videos_v1";
-const RETENTION_MS = 24 * 60 * 60 * 1000; // 24 Hours in milliseconds
+export const RETENTION_MS = 12 * 60 * 60 * 1000; // 12 Hours in milliseconds (Automated Auto-Purge)
 
 export const INITIAL_DEMO_RECORDINGS: TripVideoRecording[] = [
   {
-    id: "vid-cabin-01",
+    id: "vid-fulltrip-42a-01",
     tripId: "trip-sample-01",
     busId: "BUS-42A",
-    recordedBy: "On-Board Cabin CCTV Channel 3",
-    recordedAt: Date.now() - 4 * 60 * 60 * 1000, // 4 hours ago
-    durationSeconds: 45,
+    recordedBy: "Full Journey DVR • Road & Cabin CCTV (Downtown ➔ Tech Park)",
+    recordedAt: Date.now() - 3.5 * 60 * 60 * 1000, // 3.5 hours ago
+    durationSeconds: 2700, // 45 minutes
     status: "stored",
-    completedAt: Date.now() - 3.5 * 60 * 60 * 1000,
-    expiresAt: Date.now() - 3.5 * 60 * 60 * 1000 + RETENTION_MS, // ~20.5 hours left
+    completedAt: Date.now() - 2.8 * 60 * 60 * 1000,
+    expiresAt: Date.now() - 2.8 * 60 * 60 * 1000 + RETENTION_MS, // ~9.2 hours left
     encryptionHash: "AES256-GCM-7f9a2b4c81d3",
   },
   {
-    id: "vid-dms-02",
+    id: "vid-dms-42a-02",
     tripId: "trip-sample-01",
     busId: "BUS-42A",
-    recordedBy: "AI Driver DMS Camera",
+    recordedBy: "AI Driver DMS & Safety Telematics Stream (Pilot Shift 1)",
     recordedAt: Date.now() - 2 * 60 * 60 * 1000, // 2 hours ago
-    durationSeconds: 30,
+    durationSeconds: 1800, // 30 minutes
     status: "stored",
-    completedAt: Date.now() - 1.8 * 60 * 60 * 1000,
-    expiresAt: Date.now() - 1.8 * 60 * 60 * 1000 + RETENTION_MS, // ~22.2 hours left
+    completedAt: Date.now() - 1.5 * 60 * 60 * 1000,
+    expiresAt: Date.now() - 1.5 * 60 * 60 * 1000 + RETENTION_MS, // ~10.5 hours left
     encryptionHash: "AES256-GCM-91e823fca401",
+  },
+  {
+    id: "vid-cabin-42a-03",
+    tripId: "trip-sample-01",
+    busId: "BUS-42A",
+    recordedBy: "Door Entry & Passenger Boarding Safety Cam (Stops 1-6)",
+    recordedAt: Date.now() - 1 * 60 * 60 * 1000, // 1 hour ago
+    durationSeconds: 900, // 15 minutes
+    status: "stored",
+    completedAt: Date.now() - 0.75 * 60 * 60 * 1000,
+    expiresAt: Date.now() - 0.75 * 60 * 60 * 1000 + RETENTION_MS, // ~11.25 hours left
+    encryptionHash: "AES256-GCM-33bc88fa091e",
+  },
+  {
+    id: "vid-fulltrip-18b-01",
+    tripId: "trip-sample-18b",
+    busId: "BUS-18B",
+    recordedBy: "Full Journey DVR • Airport Express Route (Stops 1-12)",
+    recordedAt: Date.now() - 4 * 60 * 60 * 1000,
+    durationSeconds: 3120, // 52 minutes
+    status: "stored",
+    completedAt: Date.now() - 3.2 * 60 * 60 * 1000,
+    expiresAt: Date.now() - 3.2 * 60 * 60 * 1000 + RETENTION_MS,
+    encryptionHash: "AES256-GCM-ba5529f109bc",
+  },
+  {
+    id: "vid-fulltrip-09c-01",
+    tripId: "trip-sample-09c",
+    busId: "BUS-09C",
+    recordedBy: "Full Journey DVR • City Center Metro Link",
+    recordedAt: Date.now() - 2.5 * 60 * 60 * 1000,
+    durationSeconds: 2280, // 38 minutes
+    status: "stored",
+    completedAt: Date.now() - 1.9 * 60 * 60 * 1000,
+    expiresAt: Date.now() - 1.9 * 60 * 60 * 1000 + RETENTION_MS,
+    encryptionHash: "AES256-GCM-cc0991823abf",
   },
 ];
 
@@ -120,7 +156,30 @@ class VideoRetentionEngine {
     return newRecord;
   }
 
-  // 2. Trigger 24-hour expiration clock when trip finishes
+  // 2. Automatically record full trip video upon trip completion or manual save
+  public async recordFullTripVideo(
+    trip: Trip,
+    driverName?: string
+  ): Promise<TripVideoRecording> {
+    const durationSeconds = Math.max(
+      60,
+      Math.round(((trip.completedAt || Date.now()) - trip.startedAt) / 1000)
+    );
+
+    const recordingTitle = `Full Journey DVR Video • ${trip.originStop || "Start"} ➔ ${trip.destinationStop || "Terminal"} (${trip.passengerName})`;
+
+    return this.addRecording({
+      id: `trip-dvr-${trip.tripId}-${Date.now()}`,
+      tripId: trip.tripId,
+      busId: trip.busId,
+      recordedBy: recordingTitle,
+      recordedAt: trip.startedAt,
+      completedAt: trip.completedAt || Date.now(),
+      durationSeconds,
+    });
+  }
+
+  // 3. Trigger 12-hour expiration clock when trip finishes
   public onTripCompleted(tripId: string) {
     const now = Date.now();
     const newExpiresAt = now + RETENTION_MS;
@@ -140,7 +199,7 @@ class VideoRetentionEngine {
     this.notify();
   }
 
-  // 3. Automated purge daemon: deletes recordings > 24 hours after completion
+  // 4. Automated purge daemon: permanently deletes recordings > 12 hours after completion
   public purgeExpired(): number {
     const now = Date.now();
     const initialCount = this.recordings.length;
@@ -159,7 +218,7 @@ class VideoRetentionEngine {
     return deletedCount;
   }
 
-  // 4. Preserve incident video for police / fleet investigation
+  // 5. Preserve incident video for police / fleet investigation
   public preserveIncidentVideo(recordingId: string) {
     this.recordings = this.recordings.map((rec) =>
       rec.id === recordingId ? { ...rec, isIncidentPreserved: true } : rec
@@ -168,13 +227,13 @@ class VideoRetentionEngine {
     this.notify();
   }
 
-  // 5. Demo Tool: Simulate passing 24 hours to test auto-deletion
-  public simulateFastForward24Hours() {
+  // 6. Demo Tool: Simulate passing 12 hours to test automated permanent deletion
+  public simulateFastForward12Hours() {
     this.recordings = this.recordings.map((rec) => {
       if (rec.isIncidentPreserved) return rec;
       return {
         ...rec,
-        expiresAt: Date.now() - 1000, // Make it expired
+        expiresAt: Date.now() - 1000, // Expire immediately
       };
     });
     this.purgeExpired();

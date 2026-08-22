@@ -364,7 +364,7 @@ export default function OnBoardCCTVFeed({
       <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-xs">
           <Lock className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-slate-300 font-medium">Encrypted 24-Hour Purge Active</span>
+          <span className="text-slate-300 font-medium">Encrypted 12-Hour Auto-Purge Active</span>
           <button
             onClick={() => setIsVaultOpen(true)}
             className="text-blue-400 hover:text-blue-300 font-bold underline text-xs ml-1"

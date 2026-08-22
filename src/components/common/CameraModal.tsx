@@ -343,7 +343,7 @@ export default function CameraModal({
           <div className="px-4 py-1.5 bg-cyan-950/40 border-b border-cyan-500/20 flex items-center justify-between text-[11px]">
             <div className="flex items-center gap-1.5 text-cyan-300">
               <Lock className="w-3.5 h-3.5 text-cyan-400" />
-              <span>24h Ephemeral Purge Guarantee</span>
+              <span>12h Ephemeral Purge Guarantee</span>
             </div>
             <button
               onClick={() => setIsVideoRetentionOpen(true)}

@@ -421,6 +421,9 @@ class SyncEngine {
     if (typeof window !== "undefined") {
       try {
         const { getVideoRetentionEngine } = await import("./video-retention");
+        if (updated) {
+          await getVideoRetentionEngine().recordFullTripVideo(updated);
+        }
         getVideoRetentionEngine().onTripCompleted(tripId);
       } catch (e) {}
     }

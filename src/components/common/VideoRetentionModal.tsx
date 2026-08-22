@@ -21,20 +21,26 @@ import {
   Camera,
   Maximize2,
   Volume2,
+  Bus,
+  Filter,
+  PlusCircle,
 } from "lucide-react";
 
 interface VideoRetentionModalProps {
   isOpen: boolean;
   onClose: () => void;
   tripId?: string;
+  targetBusId?: string;
 }
 
 export default function VideoRetentionModal({
   isOpen,
   onClose,
   tripId,
+  targetBusId,
 }: VideoRetentionModalProps) {
   const [recordings, setRecordings] = useState<TripVideoRecording[]>([]);
+  const [selectedBusFilter, setSelectedBusFilter] = useState<string>(targetBusId || "ALL");
   const [now, setNow] = useState<number>(Date.now());
   const [notification, setNotification] = useState<string | null>(null);
   const [activePlayingRecording, setActivePlayingRecording] = useState<TripVideoRecording | null>(null);
@@ -42,13 +48,22 @@ export default function VideoRetentionModal({
   const [playbackProgress, setPlaybackProgress] = useState<number>(0);
 
   useEffect(() => {
+    if (targetBusId) {
+      setSelectedBusFilter(targetBusId);
+    }
+  }, [targetBusId]);
+
+  useEffect(() => {
     if (!isOpen) return;
 
     const engine = getVideoRetentionEngine();
     const unsub = engine.subscribe((recs) => {
       setRecordings(recs);
-      if (recs.length > 0 && !activePlayingRecording) {
-        setActivePlayingRecording(recs[0]);
+      const filtered = targetBusId
+        ? recs.filter((r) => r.busId === targetBusId)
+        : recs;
+      if (filtered.length > 0 && !activePlayingRecording) {
+        setActivePlayingRecording(filtered[0]);
       }
     });
 
@@ -60,7 +75,7 @@ export default function VideoRetentionModal({
       unsub();
       clearInterval(clockTimer);
     };
-  }, [isOpen]);
+  }, [isOpen, targetBusId]);
 
   // Video progress animation when playing
   useEffect(() => {
@@ -72,6 +87,16 @@ export default function VideoRetentionModal({
     }
     return () => clearInterval(interval);
   }, [activePlayingRecording, isPlaying]);
+
+  const displayedRecordings = recordings.filter((rec) => {
+    if (targetBusId) {
+      return rec.busId === targetBusId;
+    }
+    if (selectedBusFilter !== "ALL") {
+      return rec.busId === selectedBusFilter;
+    }
+    return true;
+  });
 
   const formatRemainingTime = (expiresAt: number) => {
     const diff = expiresAt - now;
@@ -86,8 +111,8 @@ export default function VideoRetentionModal({
 
   const handleSimulateFastForward = () => {
     const engine = getVideoRetentionEngine();
-    engine.simulateFastForward24Hours();
-    setNotification("⏩ Fast-forwarded 24 hours: Expired footage was automatically purged!");
+    engine.simulateFastForward12Hours();
+    setNotification("⏩ Fast-forwarded 12 hours: All expired trip videos were automatically deleted!");
     getSoundEngine().playClick();
     setTimeout(() => setNotification(null), 4000);
   };
@@ -96,6 +121,23 @@ export default function VideoRetentionModal({
     const engine = getVideoRetentionEngine();
     engine.preserveIncidentVideo(id);
     setNotification("🛡️ Evidence Preserved: Flagged for legal & driver safety dispute review.");
+    getSoundEngine().playSuccess();
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleRecordNewTripClip = () => {
+    const engine = getVideoRetentionEngine();
+    const busId = targetBusId || "BUS-42A";
+    engine.addRecording({
+      id: `trip-clip-${Date.now()}`,
+      tripId: `trip-live-${Date.now()}`,
+      busId: busId,
+      recordedBy: `Full Trip CCTV & Road Dashcam • Live Journey Segment (${busId})`,
+      recordedAt: Date.now() - 30 * 60 * 1000,
+      completedAt: Date.now(),
+      durationSeconds: 1800,
+    });
+    setNotification(`🔴 New Full Trip Video Recorded & Saved for ${busId}! Protected under 12h policy.`);
     getSoundEngine().playSuccess();
     setTimeout(() => setNotification(null), 4000);
   };
@@ -113,7 +155,7 @@ export default function VideoRetentionModal({
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-950 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md">
               <Video className="w-5 h-5" />
@@ -121,32 +163,54 @@ export default function VideoRetentionModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-white">
-                  Driver & Fleet Saved Video Archive (DVR Vault)
+                  {targetBusId ? `Saved Trip Videos • ${targetBusId}` : "Saved Trip Videos (DVR Archive)"}
                 </h3>
                 <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-800 font-bold">
-                  24H VAULT
+                  12-HOUR AUTO-PURGE
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Encrypted on-board CCTV recordings, DMS dashcam clips & passenger safety incident footage
+                {targetBusId
+                  ? `Showing full journey CCTV & dashcam videos recorded specifically on vehicle ${targetBusId}`
+                  : "Encrypted full trip journey recordings, CCTV feeds & driver DMS telematics"}
               </p>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRecordNewTripClip}
+              className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 shadow transition"
+              title="Record and archive the active full trip video"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Record Trip Video</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Notice Banner */}
-        <div className="p-3.5 bg-blue-950/40 border-b border-slate-800 flex items-start gap-2.5 text-xs text-slate-300">
-          <Lock className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-          <div>
-            <strong className="text-blue-300 font-semibold">Zero-Knowledge Encrypted Footage:</strong> All vehicle CCTV & dashcam clips are encrypted with <code className="text-blue-200">AES-256-GCM</code> and auto-purged after 24 hours unless preserved for safety audit.
+        {/* 12-Hour Policy Banner */}
+        <div className="p-3.5 bg-blue-950/40 border-b border-slate-800 flex items-start justify-between gap-3 text-xs text-slate-300">
+          <div className="flex items-start gap-2.5">
+            <Lock className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-blue-300 font-semibold">12-Hour Automated Deletion Protocol:</strong> All full trip videos are encrypted with <code className="text-blue-200">AES-256-GCM</code> and <strong className="text-white">automatically deleted exactly 12 hours</strong> after trip completion.
+            </div>
           </div>
+
+          {targetBusId && (
+            <span className="px-2 py-1 rounded-lg bg-slate-800 text-blue-300 font-mono text-[10px] font-bold border border-slate-700 shrink-0 flex items-center gap-1">
+              <Bus className="w-3 h-3" />
+              <span>{targetBusId} ONLY</span>
+            </span>
+          )}
         </div>
 
         {/* Notification Toast */}
@@ -178,8 +242,8 @@ export default function VideoRetentionModal({
                     <span className="text-slate-400">• {activePlayingRecording.recordedBy}</span>
                   </div>
 
-                  <span className="bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800 text-blue-300">
-                    ENCRYPTION: AES-256
+                  <span className="bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800 text-emerald-400">
+                    🔒 12H RETENTION ACTIVE
                   </span>
                 </div>
 
@@ -189,10 +253,10 @@ export default function VideoRetentionModal({
                     {isPlaying ? <Play className="w-7 h-7 fill-current" /> : <Pause className="w-7 h-7" />}
                   </div>
                   <span className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-                    {activePlayingRecording.recordedBy} Footage ({activePlayingRecording.durationSeconds}s)
+                    {activePlayingRecording.recordedBy} ({Math.round(activePlayingRecording.durationSeconds / 60)} mins)
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    Hash: {activePlayingRecording.encryptionHash}
+                    Encrypted Hash: {activePlayingRecording.encryptionHash}
                   </span>
                 </div>
 
@@ -236,21 +300,45 @@ export default function VideoRetentionModal({
 
           {/* Recordings Feed */}
           <div className="space-y-2.5">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-300 px-1">
-              <span>Saved Video Clips ({recordings.length})</span>
-              <span className="text-[10px] text-slate-500 font-mono">Click any clip to play</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-slate-300 px-1">
+              <div className="flex items-center gap-2">
+                <span>Saved Trip Recordings ({displayedRecordings.length})</span>
+                {targetBusId && (
+                  <span className="text-[10px] bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-800 font-mono">
+                    Filtered for {targetBusId}
+                  </span>
+                )}
+              </div>
+
+              {!targetBusId && (
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-slate-400" />
+                  <select
+                    value={selectedBusFilter}
+                    onChange={(e) => setSelectedBusFilter(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-bold"
+                  >
+                    <option value="ALL">All Fleet Buses</option>
+                    <option value="BUS-42A">BUS-42A</option>
+                    <option value="BUS-18B">BUS-18B</option>
+                    <option value="BUS-09C">BUS-09C</option>
+                  </select>
+                </div>
+              )}
             </div>
 
-            {recordings.length === 0 ? (
+            {displayedRecordings.length === 0 ? (
               <div className="text-center py-10 rounded-2xl bg-slate-950 border border-slate-800">
                 <Trash2 className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                <div className="text-sm font-bold text-slate-300">DVR Vault Empty</div>
+                <div className="text-sm font-bold text-slate-300">
+                  {targetBusId ? `No Saved Videos for ${targetBusId}` : "DVR Vault Empty"}
+                </div>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  No active recordings found. Any previous footage was permanently deleted upon reaching the 24-hour retention window.
+                  Any recordings older than 12 hours were automatically and permanently deleted under the SafeBus privacy policy. Click &quot;Record Trip Video&quot; above to capture a new trip segment.
                 </p>
               </div>
             ) : (
-              recordings.map((rec) => {
+              displayedRecordings.map((rec) => {
                 const isSelected = activePlayingRecording?.id === rec.id;
 
                 return (
@@ -276,8 +364,11 @@ export default function VideoRetentionModal({
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-white">{rec.recordedBy}</span>
+                          <span className="text-[10px] font-mono text-blue-300 bg-blue-950 px-1.5 py-0.5 rounded border border-blue-800">
+                            {rec.busId}
+                          </span>
                           <span className="text-[10px] font-mono text-slate-400">
-                            {rec.busId} • {rec.durationSeconds}s
+                            {Math.round(rec.durationSeconds / 60)} mins
                           </span>
                         </div>
                         <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-1.5">
@@ -290,9 +381,9 @@ export default function VideoRetentionModal({
                           <Clock className="w-3 h-3 text-amber-400" />
                           <span className="text-[10px] font-mono font-bold text-amber-300">
                             {rec.isIncidentPreserved ? (
-                              <span className="text-red-400">🛡️ PRESERVED FOR EVIDENCE</span>
+                              <span className="text-red-400">🛡️ PRESERVED FOR LEGAL/SAFETY AUDIT</span>
                             ) : (
-                              `Auto-purges in: ${formatRemainingTime(rec.expiresAt)}`
+                              `Auto-deletes in: ${formatRemainingTime(rec.expiresAt)}`
                             )}
                           </span>
                         </div>
@@ -304,10 +395,10 @@ export default function VideoRetentionModal({
                         className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold ${
                           rec.isIncidentPreserved
                             ? "bg-red-950 text-red-400 border border-red-800"
-                            : "bg-blue-950 text-blue-400 border border-blue-800"
+                            : "bg-emerald-950 text-emerald-400 border border-emerald-800"
                         }`}
                       >
-                        {rec.isIncidentPreserved ? "PRESERVED" : "24H ARMED"}
+                        {rec.isIncidentPreserved ? "PRESERVED" : "12H ARMED"}
                       </span>
                     </div>
                   </div>
@@ -320,7 +411,7 @@ export default function VideoRetentionModal({
         {/* Footer with Fast-Forward Simulation Tool */}
         <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="text-[11px] text-slate-400">
-            Encrypted with <strong className="text-white">AES-256</strong> • Automatically purged after 24 hours.
+            Encrypted with <strong className="text-white">AES-256</strong> • Automatically deleted after <strong>12 hours</strong>.
           </div>
 
           <div className="flex items-center gap-2">
@@ -329,7 +420,7 @@ export default function VideoRetentionModal({
               className="px-3 py-1.5 rounded-xl bg-blue-950 hover:bg-blue-900 border border-blue-800 text-blue-300 text-xs font-bold flex items-center gap-1.5 transition"
             >
               <FastForward className="w-3.5 h-3.5" />
-              <span>Simulate 24h Purge</span>
+              <span>Simulate 12h Deletion</span>
             </button>
 
             <button
