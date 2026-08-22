@@ -6,6 +6,7 @@ import { ROUTE_STOPS } from "@/lib/route-data";
 import { getSyncEngine } from "@/lib/sync-engine";
 import CameraModal from "@/components/common/CameraModal";
 import CCTVConfigModal from "@/components/common/CCTVConfigModal";
+import PassengerManifestModal from "@/components/common/PassengerManifestModal";
 import {
   getBusCameraConfig,
   BusCameraConfig,
@@ -53,6 +54,7 @@ export default function DriverCockpitPanel({
   const [occupancy, setOccupancy] = useState<number>(bus.occupancy || 28);
   const [dmsScore, setDmsScore] = useState<number>(96);
   const [isDmsCameraOpen, setIsDmsCameraOpen] = useState<boolean>(false);
+  const [isManifestOpen, setIsManifestOpen] = useState<boolean>(false);
   const [announcementMsg, setAnnouncementMsg] = useState<string | null>(null);
   const [isSosActive, setIsSosActive] = useState<boolean>(bus.status === "emergency");
   const [shiftSeconds, setShiftSeconds] = useState<number>(11700);
@@ -263,7 +265,17 @@ export default function DriverCockpitPanel({
         </div>
 
         {/* Live Shift & Door Status */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setIsManifestOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 shadow transition"
+            title="View full on-board passenger manifest and emergency contacts"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Passenger Manifest ({occupancy})</span>
+          </button>
+
           <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2">
             <Clock className="w-4 h-4 text-blue-400" />
             <div>
@@ -467,9 +479,15 @@ export default function DriverCockpitPanel({
                     {occupancy} / {bus.capacity} Seats
                   </div>
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800">
-                  <Users className="w-5 h-5" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsManifestOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl bg-blue-950 hover:bg-blue-900 text-blue-300 border border-blue-800 text-xs font-bold flex items-center gap-1.5 transition"
+                  title="View full on-board passenger manifest"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Roster Details →</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -810,6 +828,12 @@ export default function DriverCockpitPanel({
           setCctvConfig(updated);
           setFeedMode(updated.preferredMode);
         }}
+      />
+
+      <PassengerManifestModal
+        isOpen={isManifestOpen}
+        onClose={() => setIsManifestOpen(false)}
+        targetBusId={bus.id}
       />
     </div>
   );

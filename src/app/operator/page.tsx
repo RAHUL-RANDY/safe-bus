@@ -6,6 +6,7 @@ import InteractiveMap from "@/components/common/InteractiveMap";
 import LiveAlertsFeed from "@/components/operator/LiveAlertsFeed";
 import FleetListPanel from "@/components/operator/FleetListPanel";
 import OnBoardCCTVFeed from "@/components/operator/OnBoardCCTVFeed";
+import PassengerManifestModal from "@/components/common/PassengerManifestModal";
 import { getSyncEngine } from "@/lib/sync-engine";
 import { Bus, Alert, GeoLocation } from "@/types";
 import { useAuth, DEMO_USERS } from "@/lib/auth-context";
@@ -21,6 +22,7 @@ import {
   Sparkles,
   KeyRound,
   BadgeCheck,
+  UserCheck,
 } from "lucide-react";
 
 export default function OperatorPage() {
@@ -30,6 +32,7 @@ export default function OperatorPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedBusId, setSelectedBusId] = useState<string>("BUS-42A");
   const [focusLocation, setFocusLocation] = useState<GeoLocation | null>(null);
+  const [isPassengerModalOpen, setIsPassengerModalOpen] = useState<boolean>(false);
 
   // Admin login form states for gatekeeper
   const [adminEmail, setAdminEmail] = useState("david.vance@safebus-nexus.gov");
@@ -269,15 +272,27 @@ export default function OperatorPage() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3 shadow">
-            <div className="w-10 h-10 rounded-xl bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800 font-bold">
-              <Users className="w-5 h-5" />
+          <button
+            onClick={() => setIsPassengerModalOpen(true)}
+            className="p-4 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/50 flex items-center justify-between text-left shadow transition group cursor-pointer"
+            title="Click to view full on-board passenger details"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-950 text-blue-400 flex items-center justify-center border border-blue-800 font-bold group-hover:scale-105 transition">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <span>Total Passengers</span>
+                  <span className="text-[9px] text-blue-400 font-normal underline">View All →</span>
+                </div>
+                <div className="text-xl font-black text-white font-mono">{totalPassengers}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400">Total Passengers</div>
-              <div className="text-xl font-black text-white font-mono">{totalPassengers}</div>
-            </div>
-          </div>
+            <span className="px-2 py-1 rounded-lg bg-blue-900/40 text-blue-300 text-[10px] font-bold border border-blue-800/60 hidden sm:inline">
+              Open Manifest
+            </span>
+          </button>
 
           <div
             className={`p-4 rounded-xl border flex items-center gap-3 shadow transition ${
@@ -374,6 +389,12 @@ export default function OperatorPage() {
           />
         </div>
       </main>
+
+      <PassengerManifestModal
+        isOpen={isPassengerModalOpen}
+        onClose={() => setIsPassengerModalOpen(false)}
+        buses={buses}
+      />
     </div>
   );
 }
