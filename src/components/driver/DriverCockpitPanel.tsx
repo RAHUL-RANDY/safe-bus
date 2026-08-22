@@ -7,6 +7,7 @@ import { getSyncEngine } from "@/lib/sync-engine";
 import CameraModal from "@/components/common/CameraModal";
 import CCTVConfigModal from "@/components/common/CCTVConfigModal";
 import PassengerManifestModal from "@/components/common/PassengerManifestModal";
+import VideoRetentionModal from "@/components/common/VideoRetentionModal";
 import {
   getBusCameraConfig,
   BusCameraConfig,
@@ -32,6 +33,8 @@ import {
   Settings,
   Eye,
   RotateCw,
+  Film,
+  Video,
 } from "lucide-react";
 
 import { getSoundEngine } from "@/lib/audio-effects";
@@ -55,6 +58,7 @@ export default function DriverCockpitPanel({
   const [dmsScore, setDmsScore] = useState<number>(96);
   const [isDmsCameraOpen, setIsDmsCameraOpen] = useState<boolean>(false);
   const [isManifestOpen, setIsManifestOpen] = useState<boolean>(false);
+  const [isVideoRetentionOpen, setIsVideoRetentionOpen] = useState<boolean>(false);
   const [announcementMsg, setAnnouncementMsg] = useState<string | null>(null);
   const [isSosActive, setIsSosActive] = useState<boolean>(bus.status === "emergency");
   const [shiftSeconds, setShiftSeconds] = useState<number>(11700);
@@ -274,6 +278,16 @@ export default function DriverCockpitPanel({
           >
             <Users className="w-3.5 h-3.5" />
             <span>Passenger Manifest ({occupancy})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsVideoRetentionOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 shadow transition"
+            title="View saved on-board CCTV and Dashcam video recordings"
+          >
+            <Film className="w-3.5 h-3.5" />
+            <span>Saved Videos (DVR)</span>
           </button>
 
           <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2">
@@ -768,6 +782,15 @@ export default function DriverCockpitPanel({
                 <span>Expand</span>
               </button>
             </div>
+
+            {/* View Saved DVR Videos Trigger */}
+            <button
+              onClick={() => setIsVideoRetentionOpen(true)}
+              className="w-full py-2 px-3 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/80 text-purple-300 hover:text-purple-200 text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+            >
+              <Film className="w-4 h-4 text-purple-400" />
+              <span>View Saved Videos (24H DVR Archive) →</span>
+            </button>
           </div>
 
           {/* Driver Emergency SOS & Hazard Broadcast */}
@@ -834,6 +857,11 @@ export default function DriverCockpitPanel({
         isOpen={isManifestOpen}
         onClose={() => setIsManifestOpen(false)}
         targetBusId={bus.id}
+      />
+
+      <VideoRetentionModal
+        isOpen={isVideoRetentionOpen}
+        onClose={() => setIsVideoRetentionOpen(false)}
       />
     </div>
   );
