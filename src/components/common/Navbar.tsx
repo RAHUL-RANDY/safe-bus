@@ -59,8 +59,8 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation Tabs */}
-        <nav className="flex items-center gap-1 p-1 rounded-xl bg-slate-950/70 border border-slate-800">
+        {/* Navigation Tabs (Desktop only - Mobile uses bottom nav) */}
+        <nav className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-slate-950/70 border border-slate-800">
           {NAV_LINKS.map(({ href, label, shortLabel, icon: Icon }) => {
             const active = pathname === href;
             return (
@@ -74,8 +74,7 @@ export default function Navbar() {
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${active ? "text-white" : "text-slate-400"}`} />
-                <span className="hidden md:inline">{label}</span>
-                <span className="md:hidden">{shortLabel}</span>
+                <span>{label}</span>
               </Link>
             );
           })}

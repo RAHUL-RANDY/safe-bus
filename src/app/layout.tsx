@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { ToastProvider } from "@/lib/toast-context";
+import MobileBottomNav from "@/components/common/MobileBottomNav";
 
 export const metadata: Metadata = {
   title: "SafeBus Nexus — Where AI Protects Every Journey",
@@ -32,10 +33,13 @@ export default function RootLayout({
           crossOrigin=""
         />
       </head>
-      <body className="min-h-full flex flex-col text-slate-100">
+      <body className="min-h-full flex flex-col text-slate-100 pb-16 md:pb-0 selection:bg-blue-500 selection:text-white">
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              {children}
+              <MobileBottomNav />
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -434,7 +434,7 @@ function TicketBookingAndPaymentContent() {
         onLoad={() => setIsRazorpayScriptLoaded(true)}
       />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 flex flex-col gap-4 sm:gap-6">
         {/* Top Header Banner */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow">
           <div className="flex items-center gap-3">
