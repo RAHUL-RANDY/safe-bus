@@ -17,6 +17,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { useAuth, DEMO_USERS } from "@/lib/auth-context";
+import SafeBusLogo from "@/components/common/SafeBusLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -91,18 +92,10 @@ export default function LoginPage() {
     <div className="min-h-[calc(100vh-65px)] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-950">
       <div className="w-full max-w-md">
         {/* Main Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
           {/* Header Brand */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white font-bold shadow mb-3">
-              <Shield className="w-6 h-6" />
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              SafeBus Transit Access
-            </h1>
-            <p className="text-xs text-slate-400 mt-1">
-              Secure Unified Public Transit & Fleet Operations Portal
-            </p>
+          <div className="text-center mb-6 flex flex-col items-center">
+            <SafeBusLogo size="lg" animated={true} subText="Unified Enterprise Public Transit & Fleet Operations" />
           </div>
 
           {/* Role Switcher Tabs */}

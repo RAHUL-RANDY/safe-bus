@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <radialGradient id="favBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="favShield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <linearGradient id="favBus" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="50%" stop-color="#93c5fd" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="favGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="128" fill="#090d16" />
+  <circle cx="256" cy="256" r="230" fill="url(#favBg)" />
+
+  <!-- Shield -->
+  <path
+    d="M256 46C150 78 80 120 80 230C80 345 180 435 256 470C332 435 432 345 432 230C432 120 362 78 256 46Z"
+    fill="#0f172a"
+    stroke="url(#favShield)"
+    stroke-width="16"
+  />
+
+  <!-- Bus Chassis -->
+  <rect x="156" y="150" width="200" height="210" rx="36" fill="url(#favBus)" />
+  <rect x="176" y="168" width="160" height="74" rx="18" fill="url(#favGlass)" stroke="#38bdf8" stroke-width="3" />
+  
+  <!-- Windows -->
+  <rect x="176" y="254" width="34" height="42" rx="8" fill="#0f172a" stroke="#60a5fa" stroke-width="2.5" />
+  <rect x="218" y="254" width="34" height="42" rx="8" fill="#0f172a" stroke="#60a5fa" stroke-width="2.5" />
+  <rect x="260" y="254" width="34" height="42" rx="8" fill="#0f172a" stroke="#60a5fa" stroke-width="2.5" />
+  <rect x="302" y="254" width="34" height="42" rx="8" fill="#0f172a" stroke="#60a5fa" stroke-width="2.5" />
+
+  <!-- Headlights -->
+  <rect x="168" y="316" width="36" height="14" rx="6" fill="#38bdf8" />
+  <rect x="308" y="316" width="36" height="14" rx="6" fill="#38bdf8" />
+
+  <!-- Center Core -->
+  <circle cx="256" cy="395" r="26" fill="#090d16" stroke="#38bdf8" stroke-width="4" />
+  <path d="M256 385 L259 392 L266 395 L259 398 L256 405 L253 398 L246 395 L253 392 Z" fill="#ffffff" />
+</svg>
